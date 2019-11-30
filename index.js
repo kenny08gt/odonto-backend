@@ -6,10 +6,23 @@ const path = require('path');
 const socketIo = require("socket.io");
 const axios = require("axios");
 const index = require("./routes/index");
-const sequelize = require("./connection");
+const { Sequelize, Model, DataTypes } = require('sequelize');
+//const sequelize = require("./connection");
 const app = express();
 const port = process.env.PORT || 4001;
 // app.use(index);
+
+var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
+    host: process.env.DB_HOST,
+    dialect: 'mysql',
+
+    pool: {
+        max: 5,
+        min: 0,
+        idle: 10000
+    },
+});
+let Seat = require("./models/Seat")(sequelize, DataTypes);
 
 Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
@@ -65,11 +78,104 @@ io.on("connection", socket => {
 
     socket.on('connected', function (data, callback) {
         console.log('connected from frontend');
-        callback('test connected akn');
+        let seats = Seat.findAll().then(function (seats) {
+            seats = seats.map(function(seat){
+                return {
+                    'columna': seat.column, 
+                    'fila': seat.row, 
+                    'estado': seat.state === 1 ? 'blocked' : 'sold',
+                    'seccion': seat.section
+                }
+            })
+            callback(seats);
+        }).catch(function (err) {
+            callback({});
+        });;
     });
 
-    socket.on('seatModified', function (data) {
+    socket.on('seatModified', function (data, callback) {
         console.log('seat modified ', data);
+
+        if (data.estado === 'blocked') {
+            console.log(Seat);
+            Seat.findOne({
+                where: {
+                    row: data.fila,
+                    column: data.columna,
+                    section: data.seccion
+                }
+            }).then(function (seat) {
+                if (seat === null) {
+                    Seat.create(
+                        {
+                            row: data.fila,
+                            column: data.columna,
+                            section: data.seccion,
+                            state: data.estado == 'bloqueado' ? 1 : 2,
+                            transactionl: '',
+                        }).then(seat => {
+                            callback({
+                                status: true,
+                                message: 'Asiento bloqueado',
+                                seat: seat,
+                            })
+                        })
+                } else
+                    callback({
+                        status: false,
+                        message: 'Ese asiento ya esta ocupado'
+                    })
+
+            });
+        } else if (data.estado === 'sold') {
+            Seat.findOne({
+                where: {
+                    row: data.fila,
+                    column: data.columna,
+                    section: data.seccion
+                }
+            }).then(function (seat) {
+                if (seat === null) {
+                    callback({
+                        status: false,
+                        message: 'No se encontro el asiento'
+                    })
+                } else {
+                    seat.state = 2;
+                    seat.save().then(() => {
+                        callback({
+                        status: true,
+                        message: 'Asiento vendido'
+                    })  
+                    });
+                }
+
+            });
+        } else if (data.estado === 'free') {
+            Seat.findOne({
+                where: {
+                    row: data.fila,
+                    column: data.columna,
+                    section: data.seccion
+                }
+            }).then(function (seat) {
+                if (seat === null) {
+                    callback({
+                        status: false,
+                        message: 'No se encontro el asiento'
+                    })
+                } else {
+                    seat.destroy();
+                    callback({
+                        status: true,
+                        message: 'Asiento liberado'
+                    })
+                }
+                   
+
+            });
+        }
+
         seatModified(data);
         //    io.emit('newSeatModified', data);
     });

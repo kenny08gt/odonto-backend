@@ -11,9 +11,12 @@ module.exports = {
           primaryKey: true,
           autoIncrement: true
         },
-        email: Sequelize.EMAIL,
+        email: {
+          type: Sequelize.STRING,
+          unique: true,
+        },
         name: Sequelize.STRING,
-        tecl: {
+        tel: {
           type: Sequelize.STRING,
           allowNull: true
         },

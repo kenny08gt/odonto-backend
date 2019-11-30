@@ -9,6 +9,41 @@ module.exports = {
       Example:
       return queryInterface.createTable('users', { id: Sequelize.INTEGER });
     */
+    return queryInterface.createTable(
+      'seats',
+      {
+        id: {
+          type: Sequelize.INTEGER,
+          primaryKey: true,
+          autoIncrement: true
+        },
+        column: Sequelize.INTEGER,
+        row: Sequelize.STRING,
+        section: Sequelize.STRING,
+        state: Sequelize.INTEGER,
+        transaction: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
+        createdAt: {
+          type: Sequelize.DATE
+        },
+        updatedAt: {
+          type: Sequelize.DATE
+        },
+      },
+      {
+        uniqueKeys: {
+          actions_unique: {
+            fields: ['column', 'row', 'section']
+          }
+        }
+      },
+      {
+        engine: 'InnoDB',                     // default: 'InnoDB'
+        charset: 'latin1',                    // default: null
+      }
+    )
   },
 
   down: (queryInterface, Sequelize) => {
@@ -19,5 +54,6 @@ module.exports = {
       Example:
       return queryInterface.dropTable('users');
     */
+    return queryInterface.dropTable('seats')
   }
 };

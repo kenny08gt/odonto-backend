@@ -19,5 +19,7 @@ sequelize
     .catch(function (err) {
         console.log('Unable to connect to the database:', err);
     });
+    
+module.exports.sequelize = sequelize;
 
 //export default sequelize;
