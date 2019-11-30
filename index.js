@@ -34,6 +34,26 @@ const noticeUserConnected = async socket => {
     }
 };
 
+const seatModified = async data => {
+    try {
+        console.log('users ' + users.length);
+        users.forEach(function (element, i) {
+            // console.log(element);
+//            element.emit("userConected", users.length);
+            element.emit('newSeatModified', data);
+        });
+    } catch (error) {
+        console.error(`Error: ${error.code}`);
+    }
+}
+
+io.on('seatModified',function(data){
+      console.log(data);
+//      seatModified(data);
+    io.emit('newSeatModified', data);
+});
+
+
 io.on("connection", socket => {
     let address = socket.handshake.address;
     console.log("New client connected " + socket.id + ", ip: " + address);
