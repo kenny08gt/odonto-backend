@@ -1,9 +1,12 @@
+require('dotenv').config();
+
 const express = require('express');
 const http = require("http");
 const path = require('path');
 const socketIo = require("socket.io");
 const axios = require("axios");
 const index = require("./routes/index");
+const sequelize = require("./connection");
 const app = express();
 const port = process.env.PORT || 4001;
 // app.use(index);
@@ -39,7 +42,7 @@ const seatModified = async data => {
         console.log('users ' + users.length);
         users.forEach(function (element, i) {
             // console.log(element);
-//            element.emit("userConected", users.length);
+            //            element.emit("userConected", users.length);
             element.emit('newSeatModified', data);
         });
     } catch (error) {
@@ -47,10 +50,15 @@ const seatModified = async data => {
     }
 }
 
-io.on('seatModified',function(data){
-      console.log(data);
-//      seatModified(data);
+io.on('seatModified', function (data) {
+    console.log(data);
+    //      seatModified(data);
     io.emit('newSeatModified', data);
+});
+
+
+io.on('connected', function (data, callback) {
+    callback('test connected akn');
 });
 
 
