@@ -50,12 +50,6 @@ const seatModified = async data => {
     }
 }
 
-io.on('seatModified', function (data) {
-    console.log(data);
-    seatModified(data);
-    //    io.emit('newSeatModified', data);
-});
-
 io.on("connection", socket => {
     let address = socket.handshake.address;
     console.log("New client connected " + socket.id + ", ip: " + address);
@@ -76,6 +70,11 @@ io.on("connection", socket => {
         callback('test connected akn');
     });
 
+    socket.on('seatModified', function (data) {
+        console.log('seat modified ' + data);
+        seatModified(data);
+        //    io.emit('newSeatModified', data);
+    });
 });
 
 let checkUserConnected = (ip) => {
