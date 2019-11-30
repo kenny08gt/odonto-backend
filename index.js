@@ -12,6 +12,11 @@ const app = express();
 const port = process.env.PORT || 4001;
 // app.use(index);
 
+var fs = require('fs');
+var https = require('https');
+var privateKey  = fs.readFileSync('generated-private-key.txt', 'utf8');
+var certificate = fs.readFileSync('generated-csr.txt', 'utf8');
+var credentials = {key: privateKey, cert: certificate};
 var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
     host: process.env.DB_HOST,
     dialect: 'mysql',
@@ -32,8 +37,9 @@ app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
 app.get('/*', function (req, res) {
     res.sendFile(path.join(__dirname + '/frontend/', 'build', 'index.html'));
 });
-app.listen(9000);
-
+//app.listen(9000);
+var httpsServer = https.createServer(credentials, app);
+httpsServer.listen(9000);
 const server = http.createServer(app);
 const io = socketIo(server);
 let users = [];
