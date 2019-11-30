@@ -52,8 +52,8 @@ const seatModified = async data => {
 
 io.on('seatModified', function (data) {
     console.log(data);
-    //      seatModified(data);
-    io.emit('newSeatModified', data);
+    seatModified(data);
+//    io.emit('newSeatModified', data);
 });
 
 
