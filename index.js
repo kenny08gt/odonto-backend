@@ -58,9 +58,7 @@ io.on("connection", socket => {
     noticeUserConnected(socket);
 
     socket.on("disconnect", () => {
-
         deleteUser(socket);
-
         console.log("Client disconnected " + socket.id);
         noticeUserConnected();
     });
@@ -71,7 +69,7 @@ io.on("connection", socket => {
     });
 
     socket.on('seatModified', function (data) {
-        console.log('seat modified ' + data);
+        console.log('seat modified ', data);
         seatModified(data);
         //    io.emit('newSeatModified', data);
     });
