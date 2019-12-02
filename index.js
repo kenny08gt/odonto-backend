@@ -14,8 +14,8 @@ const port = process.env.PORT || 4001;
 
 var fs = require('fs');
 var https = require('https');
-var privateKey  = fs.readFileSync('key.pem');
-var certificate = fs.readFileSync('cert.crt');
+var privateKey  = fs.readFileSync('key.pem').toString();
+var certificate = fs.readFileSync('cert.crt').toString();
 var bundle = fs.readFileSync('bundle.crt');
 var credentials = {key: privateKey, cert: certificate};
 var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
