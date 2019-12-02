@@ -14,10 +14,10 @@ const port = process.env.PORT || 4001;
 
 var fs = require('fs');
 var https = require('https');
-var privateKey  = fs.readFileSync('keyo.pem', 'utf8');
-var certificate = fs.readFileSync('cert.crt', 'utf8');
-var bundle = fs.readFileSync('bundle.crt', 'utf8');
-var credentials = {key: privateKey, cert: certificate};
+var privateKey  = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
+var certificate = fs.readFileSync('cert.crt', 'utf8').toString();
+var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
+var credentials = {key: privateKey, cert: certificate, ca: dad};
 console.log(credentials)
 var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
     host: process.env.DB_HOST,
@@ -41,7 +41,7 @@ app.get('/*', function (req, res) {
 });
 //app.listen(9000);
 var httpsServer = https.createServer(credentials, app);
-httpsServer.listen(9000);
+httpsServer.listen(443);
 const server = http.createServer(app);
 const io = socketIo(server);
 let users = [];
