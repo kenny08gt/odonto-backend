@@ -14,7 +14,7 @@ const port = process.env.PORT || 4001;
 
 var fs = require('fs');
 var https = require('https');
-var privateKey  = fs.readFileSync('key.pem', 'utf8');
+var privateKey  = fs.readFileSync('keyo.pem', 'utf8');
 var certificate = fs.readFileSync('cert.crt', 'utf8');
 var bundle = fs.readFileSync('bundle.crt', 'utf8');
 var credentials = {key: privateKey, cert: certificate};
