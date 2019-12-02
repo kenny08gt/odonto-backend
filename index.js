@@ -41,7 +41,7 @@ app.get('/*', function (req, res) {
 });
 //app.listen(9000);
 var httpsServer = https.createServer(credentials, app);
-httpsServer.listen(7043);
+httpsServer.listen(443);
 const server = http.createServer(app);
 const io = socketIo(server);
 let users = [];
