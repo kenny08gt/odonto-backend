@@ -14,7 +14,7 @@ const port = process.env.PORT || 4001;
 
 var fs = require('fs');
 var https = require('https');
-var privateKey  = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
+var privateKey  = fs.readFileSync('generated-private-key.key', 'utf8').toString();
 var certificate = fs.readFileSync('cert.crt', 'utf8').toString();
 var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
 var credentials = {key: privateKey, cert: certificate, ca: dad};
