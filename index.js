@@ -12,12 +12,25 @@ const app = express();
 const port = process.env.PORT || 4001;
 // app.use(index);
 
+app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
+app.get('/*', function (req, res) {
+    res.sendFile(path.join(__dirname + '/frontend/', 'build', 'index.html'));
+});
 var fs = require('fs');
-var https = require('https');
-var privateKey  = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
-var certificate = fs.readFileSync('cert.crt', 'utf8').toString();
-var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
-var credentials = {key: privateKey, cert: certificate, ca: dad};
+if (process.env.NODE_ENV == 'development') {
+    app.listen(9000);
+} else {
+    var https = require('https');
+    var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
+    var certificate = fs.readFileSync('cert.crt', 'utf8').toString();
+    var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
+    var credentials = { key: privateKey, cert: certificate, ca: dad };
+
+
+    var httpsServer = https.createServer(credentials, app);
+    httpsServer.listen(443, () => console.log(`Listening on port 443`));
+}
+
 console.log(credentials)
 var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
     host: process.env.DB_HOST,
@@ -35,17 +48,11 @@ Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
 };
 
-app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
-app.get('/*', function (req, res) {
-    res.sendFile(path.join(__dirname + '/frontend/', 'build', 'index.html'));
-});
-//app.listen(9000);
-var httpsServer = https.createServer(credentials, app);
-httpsServer.listen(443, () => console.log(`Listening on port 443`));
 
 const server = http.createServer(app);
 const io = socketIo(server);
 let users = [];
+let timers = {};
 
 const noticeUserConnected = async socket => {
     try {
@@ -77,10 +84,13 @@ io.on("connection", socket => {
     console.log("New client connected " + socket.id + ", ip: " + address);
 
     users.push(socket);
+    timers[socket.id] = {};
     noticeUserConnected(socket);
 
     socket.on("disconnect", () => {
         deleteUser(socket);
+        clearInterval(timers[socket.id]);
+        delete timers[socket.id];
         console.log("Client disconnected " + socket.id);
         noticeUserConnected();
     });
@@ -88,10 +98,10 @@ io.on("connection", socket => {
     socket.on('connected', function (data, callback) {
         console.log('connected from frontend');
         let seats = Seat.findAll().then(function (seats) {
-            seats = seats.map(function(seat){
+            seats = seats.map(function (seat) {
                 return {
-                    'columna': seat.column, 
-                    'fila': seat.row, 
+                    'columna': seat.column,
+                    'fila': seat.row,
                     'estado': seat.state === 1 ? 'blocked' : 'sold',
                     'seccion': seat.section
                 }
@@ -153,9 +163,9 @@ io.on("connection", socket => {
                     seat.state = 2;
                     seat.save().then(() => {
                         callback({
-                        status: true,
-                        message: 'Asiento vendido'
-                    })  
+                            status: true,
+                            message: 'Asiento vendido'
+                        })
                     });
                 }
 
@@ -180,14 +190,33 @@ io.on("connection", socket => {
                         message: 'Asiento liberado'
                     })
                 }
-                   
+
 
             });
         }
 
         seatModified(data);
         //    io.emit('newSeatModified', data);
+        // io.emit('countdownStart');
     });
+
+    socket.on('countdownStart', function (data, callback) {
+        console.log('countdownStart for socket ' + socket.id)
+        var timeleft = 1 * 60;
+        var downloadTimer = handleTimer(socket, timeleft, callback);
+        timers[socket.id] = downloadTimer;
+    })
+
+    socket.on('countdownRestart', function (data, callback) {
+        console.log('countdownRestart for socket ' + socket.id)
+        
+        clearInterval(timers[socket.id]);
+        delete timers[socket.id];
+
+        var timeleft = 1 * 60;
+        var downloadTimer = handleTimer(socket, timeleft, callback);
+        timers[socket.id] = downloadTimer;
+    })
 });
 
 let checkUserConnected = (ip) => {
@@ -209,6 +238,23 @@ let deleteUser = (socket) => {
             break;
         }
     }
+}
+
+let handleTimer = function (socket, timeleft, callback) {
+    let downloadTimer = setInterval(function(){
+        socket.emit('countdownStart', timeleft);
+        timeleft -= 1;
+        if (timeleft <= 0) {
+            delete timers[socket.id];
+    
+            clearInterval(downloadTimer);
+            callback('countdown finished');
+            console.log('fnished countdown');
+        }
+    }, 1000);
+
+    return downloadTimer;
+  
 }
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
