@@ -15,8 +15,25 @@ module.exports = {
           type: Sequelize.STRING,
           unique: true,
         },
-        name: Sequelize.STRING,
-        tel: {
+        firstname: Sequelize.STRING,
+        lastname: Sequelize.STRING,
+        telephone: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
+        comment: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
+        register_number: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
+        university: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
+        password: {
           type: Sequelize.STRING,
           allowNull: true
         },

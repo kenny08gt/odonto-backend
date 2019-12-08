@@ -6,13 +6,112 @@ const path = require('path');
 const socketIo = require("socket.io");
 const axios = require("axios");
 const index = require("./routes/index");
+var bodyParser = require('body-parser');
+var bcrypt = require('bcrypt');
+const saltRounds = 12;
+
 const { Sequelize, Model, DataTypes } = require('sequelize');
+var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
+    host: process.env.DB_HOST,
+    dialect: 'mysql',
+
+    pool: {
+        max: 5,
+        min: 0,
+        idle: 10000
+    },
+});
+let Seat = require("./models/Seat")(sequelize, DataTypes);
+let User = require("./models/User")(sequelize, DataTypes);
+
+
 //const sequelize = require("./connection");
 const app = express();
 const port = process.env.PORT || 4001;
 // app.use(index);
 
 app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+app.post('/register', function (req, res) {
+    console.log(req.body);
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    }).then(function (user) {
+        if (user) {
+            res.json({
+                state: false,
+                message: 'El usuario ya existe'
+            });
+        } else {
+            bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
+                User.create({
+                    firstname: req.body.firstanme,
+                    lastname: req.body.lastname,
+                    telephone: req.body.telephone,
+                    email: req.body.email,
+                    comment: req.body.comment,
+                    register_number: req.body.register_number,
+                    university: req.body.university,
+                    password: hash
+                }).then(function () {
+                    User.findOrCreate(
+                        {
+                            where: {
+                                email: req.body.email
+                            }
+                        }).spread(function (user, created) {
+                            console.log(user.get({
+                                plain: true
+                            }))
+                            console.log(created)
+
+                            res.json({
+                                state: true,
+                                message: 'Registro exitoso!',
+                                user: user
+                            });
+                        })
+                })
+
+            });
+        }
+    });
+});
+
+app.post('/login', function (req, res) {
+    console.log(req.body);
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    }).then(function (user) {
+        if (!user) {
+            res.json({
+                state: false,
+                message: 'No existe este usuario'
+            });
+        } else {
+            bcrypt.compare(req.body.password, user.password, function (err, result) {
+                if (result == true) {
+                    res.json({
+                        state: true,
+                        message: 'Login exitoso!',
+                        user: user
+                    });
+                } else {
+                    res.json({
+                        state: false,
+                        message: 'Los datos no coinciden!',
+                    });
+                }
+            });
+        }
+    });
+});
+
 app.get('/*', function (req, res) {
     res.sendFile(path.join(__dirname + '/frontend/', 'build', 'index.html'));
 });
@@ -30,19 +129,6 @@ if (process.env.NODE_ENV == 'development') {
     var httpsServer = https.createServer(credentials, app);
     httpsServer.listen(443, () => console.log(`Listening on port 443`));
 }
-
-console.log(credentials)
-var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
-    host: process.env.DB_HOST,
-    dialect: 'mysql',
-
-    pool: {
-        max: 5,
-        min: 0,
-        idle: 10000
-    },
-});
-let Seat = require("./models/Seat")(sequelize, DataTypes);
 
 Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
@@ -89,7 +175,7 @@ io.on("connection", socket => {
 
     socket.on("disconnect", () => {
         deleteUser(socket);
-        clearInterval(timers[socket.id]);
+        clearInterval(timers[socket.id]['timer']);
         delete timers[socket.id];
         console.log("Client disconnected " + socket.id);
         noticeUserConnected();
@@ -133,6 +219,12 @@ io.on("connection", socket => {
                             state: data.estado == 'bloqueado' ? 1 : 2,
                             transactionl: '',
                         }).then(seat => {
+
+                            if (!timers[socket.id]['seats']) {
+                                timers[socket.id]['seats'] = [];
+                            }
+                            timers[socket.id]['seats'].push(data)
+
                             callback({
                                 status: true,
                                 message: 'Asiento bloqueado',
@@ -196,26 +288,24 @@ io.on("connection", socket => {
         }
 
         seatModified(data);
-        //    io.emit('newSeatModified', data);
-        // io.emit('countdownStart');
     });
 
     socket.on('countdownStart', function (data, callback) {
         console.log('countdownStart for socket ' + socket.id)
         var timeleft = 1 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
-        timers[socket.id] = downloadTimer;
+        timers[socket.id]['timer'] = downloadTimer;
     })
 
     socket.on('countdownRestart', function (data, callback) {
         console.log('countdownRestart for socket ' + socket.id)
-        
-        clearInterval(timers[socket.id]);
+
+        clearInterval(timers[socket.id]['timer']);
         delete timers[socket.id];
 
         var timeleft = 1 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
-        timers[socket.id] = downloadTimer;
+        timers[socket.id]['timer'] = downloadTimer;
     })
 });
 
@@ -241,12 +331,12 @@ let deleteUser = (socket) => {
 }
 
 let handleTimer = function (socket, timeleft, callback) {
-    let downloadTimer = setInterval(function(){
+    let downloadTimer = setInterval(function () {
         socket.emit('countdownStart', timeleft);
         timeleft -= 1;
         if (timeleft <= 0) {
-            delete timers[socket.id];
-    
+            delete timers[socket.id]['timer'];
+
             clearInterval(downloadTimer);
             callback('countdown finished');
             console.log('fnished countdown');
@@ -254,7 +344,7 @@ let handleTimer = function (socket, timeleft, callback) {
     }, 1000);
 
     return downloadTimer;
-  
+
 }
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
