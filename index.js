@@ -7,8 +7,21 @@ const socketIo = require("socket.io");
 const axios = require("axios");
 const index = require("./routes/index");
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
+var sharedsession = require("express-socket.io-session");
+var morgan = require('morgan');
 var bcrypt = require('bcrypt');
 const saltRounds = 12;
+var session = require("express-session")({
+    key: 'user_sid',
+    secret: 'lsrsdfg34oiwlxcv.-a.fpqqaspqwe?q2@#asdf',
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+        expires: 600000
+    }
+});
 
 const { Sequelize, Model, DataTypes } = require('sequelize');
 var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
@@ -24,6 +37,8 @@ var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, 
 let Seat = require("./models/Seat")(sequelize, DataTypes);
 let User = require("./models/User")(sequelize, DataTypes);
 
+let users = {};
+let timers = {};
 
 //const sequelize = require("./connection");
 const app = express();
@@ -32,7 +47,34 @@ const port = process.env.PORT || 4001;
 
 app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
 app.use(bodyParser.json()); // support json encoded bodies
+app.use(cookieParser());
+
+// initialize express-session to allow us track the logged-in user across sessions.
+app.use(session);
+
+
+
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+
+// This middleware will check if user's cookie is still saved in browser and user is not set, then automatically log the user out.
+// This usually happens when you stop your express server after login, your cookie still remains saved in the browser.
+app.use((req, res, next) => {
+    if (req.cookies.user_sid && !req.session.user) {
+        res.clearCookie('user_sid');
+    }
+    next();
+});
+
+
+// middleware function to check for logged-in users
+var sessionChecker = (req, res, next) => {
+    if (req.session.user && req.cookies.user_sid) {
+        res.redirect('/');
+    } else {
+        next();
+    }
+};
+
 app.post('/register', function (req, res) {
     console.log(req.body);
     User.findOne({
@@ -67,7 +109,7 @@ app.post('/register', function (req, res) {
                                 plain: true
                             }))
                             console.log(created)
-
+                            req.session.user = user.dataValues;
                             res.json({
                                 state: true,
                                 message: 'Registro exitoso!',
@@ -96,6 +138,8 @@ app.post('/login', function (req, res) {
         } else {
             bcrypt.compare(req.body.password, user.password, function (err, result) {
                 if (result == true) {
+                    req.session.user = user.dataValues;
+                    users[user.id] = null;
                     res.json({
                         state: true,
                         message: 'Login exitoso!',
@@ -110,6 +154,17 @@ app.post('/login', function (req, res) {
             });
         }
     });
+});
+
+// route for user logout
+app.get('/logout', (req, res) => {
+    if (req.session.user && req.cookies.user_sid) {
+        delete users[res.session.user.id];
+        res.clearCookie('user_sid');
+        res.redirect('/');
+    } else {
+        res.redirect('/login');
+    }
 });
 
 app.get('/*', function (req, res) {
@@ -137,47 +192,69 @@ Array.prototype.insert = function (index, item) {
 
 const server = http.createServer(app);
 const io = socketIo(server);
-let users = [];
-let timers = {};
+
+io.use(sharedsession(session, {
+    autoSave: true
+}));
+
 
 const noticeUserConnected = async socket => {
     try {
-        console.log('users ' + users.length);
-        users.forEach(function (element, i) {
-            // console.log(element);
-            element.emit("userConected", users.length);
-        });
+        console.log('users ' + Object.keys(users).length);
+        for (var key in users) {
+            if (users.hasOwnProperty(key)) {
+                console.log(key + " -> " + users[key]);
+                user = users[key];
+                user['socket'].emit("userConected", Object.keys(users).length);
+            }
+        }
     } catch (error) {
+        console.log('error on noticeuserConnectd');
+        console.log(error);
         console.error(`Error: ${error.code}`);
     }
 };
 
 const seatModified = async data => {
     try {
-        console.log('users ' + users.length);
-        users.forEach(function (element, i) {
-            // console.log(element);
-            //            element.emit("userConected", users.length);
-            element.emit('newSeatModified', data);
-        });
+        console.log('users ' + Object.keys(users).length);
+        for (var key in users) {
+            if (users.hasOwnProperty(key)) {
+                console.log(key + " -> " + users[key]);
+                user = users[key];
+                user['socket'].emit('newSeatModified', data);
+            }
+        }
     } catch (error) {
+        console.log('error on noticeuserConnectd');
+        console.log(error);
         console.error(`Error: ${error.code}`);
     }
 }
 
 io.on("connection", socket => {
-    let address = socket.handshake.address;
-    console.log("New client connected " + socket.id + ", ip: " + address);
 
-    users.push(socket);
-    timers[socket.id] = {};
+    if (!socket.handshake.session.user) {
+        console.log('user not logged in')
+        return false;
+    }
+
+    let address = socket.handshake.address;
+    console.log("New client connected " + socket.handshake.session.user.id + ", ip: " + address);
+    console.log(socket.handshake.session);
+
+    // users.push(socket);
+    if (socket.handshake.session.user)
+        users[socket.handshake.session.user.id]['socket'] = socket;
+
+    timers[socket.handshake.session.user.id] = {};
     noticeUserConnected(socket);
 
     socket.on("disconnect", () => {
         deleteUser(socket);
-        clearInterval(timers[socket.id]['timer']);
-        delete timers[socket.id];
-        console.log("Client disconnected " + socket.id);
+        clearInterval(timers[socket.handshake.session.user.id]['timer']);
+        delete timers[socket.handshake.session.user.id];
+        console.log("Client disconnected " + socket.handshake.session.user.id);
         noticeUserConnected();
     });
 
@@ -220,10 +297,10 @@ io.on("connection", socket => {
                             transactionl: '',
                         }).then(seat => {
 
-                            if (!timers[socket.id]['seats']) {
-                                timers[socket.id]['seats'] = [];
+                            if (!timers[socket.handshake.session.user.id]['seats']) {
+                                timers[socket.handshake.session.user.id]['seats'] = [];
                             }
-                            timers[socket.id]['seats'].push(data)
+                            timers[socket.handshake.session.user.id]['seats'].push(data)
 
                             callback({
                                 status: true,
@@ -291,26 +368,26 @@ io.on("connection", socket => {
     });
 
     socket.on('countdownStart', function (data, callback) {
-        console.log('countdownStart for socket ' + socket.id)
+        console.log('countdownStart for socket ' + socket.handshake.session.user.id)
         var timeleft = 1 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
-        timers[socket.id]['timer'] = downloadTimer;
+        timers[socket.handshake.session.user.id]['timer'] = downloadTimer;
     })
 
     socket.on('countdownRestart', function (data, callback) {
-        console.log('countdownRestart for socket ' + socket.id)
+        console.log('countdownRestart for socket ' + socket.handshake.session.user.id)
 
-        clearInterval(timers[socket.id]['timer']);
-        delete timers[socket.id];
+        clearInterval(timers[socket.handshake.session.user.id]['timer']);
+        delete timers[socket.handshake.session.user.id];
 
         var timeleft = 1 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
-        timers[socket.id]['timer'] = downloadTimer;
+        timers[socket.handshake.session.user.id]['timer'] = downloadTimer;
     })
 });
 
 let checkUserConnected = (ip) => {
-    for (var i = 0; i < users.length; i++) {
+    for (var i = 0; i < Object.keys(users).length; i++) {
         let socket = users[i];
         let address = socket.handshake.address;
         if (address === ip) {
@@ -322,10 +399,13 @@ let checkUserConnected = (ip) => {
 }
 
 let deleteUser = (socket) => {
-    for (var i = 0; i < users.length; i++) {
-        if (users[i] === socket) {
-            users.splice(i, 1);
-            break;
+    console.log('delete user');
+    for (var key in users) {
+        if (users.hasOwnProperty(key)) {
+            if (users[key]['socket'] === socket) {
+                delete users[key];
+                break;
+            }
         }
     }
 }
@@ -335,7 +415,7 @@ let handleTimer = function (socket, timeleft, callback) {
         socket.emit('countdownStart', timeleft);
         timeleft -= 1;
         if (timeleft <= 0) {
-            delete timers[socket.id]['timer'];
+            delete timers[socket.handshake.session.user.id]['timer'];
 
             clearInterval(downloadTimer);
             callback('countdown finished');
