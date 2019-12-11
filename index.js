@@ -75,6 +75,11 @@ var sessionChecker = (req, res, next) => {
     }
 };
 
+
+app.get('/*', function (req, res) {
+    res.sendFile(path.join(__dirname + '/frontend/', 'build', 'index.html'));
+});
+
 app.post('/register', function (req, res) {
     console.log(req.body);
     User.findOne({
@@ -167,12 +172,14 @@ app.get('/logout', (req, res) => {
     }
 });
 
-app.get('/*', function (req, res) {
-    res.sendFile(path.join(__dirname + '/frontend/', 'build', 'index.html'));
-});
+let io = null;
+let server = null;
 var fs = require('fs');
 if (process.env.NODE_ENV == 'development') {
     app.listen(9000);
+    server = http.createServer(app);
+    io = socketIo(server);
+
 } else {
     var https = require('https');
     var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
@@ -183,15 +190,15 @@ if (process.env.NODE_ENV == 'development') {
 
     var httpsServer = https.createServer(credentials, app);
     httpsServer.listen(443, () => console.log(`Listening on port 443`));
+
+    server = https.createServer(credentials, app);
+    io = socketIo(server);
+    
 }
 
 Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
 };
-
-
-const server = http.createServer(app);
-const io = socketIo(server);
 
 io.use(sharedsession(session, {
     autoSave: true
@@ -426,5 +433,6 @@ let handleTimer = function (socket, timeleft, callback) {
     return downloadTimer;
 
 }
+
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
