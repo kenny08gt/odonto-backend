@@ -12,6 +12,8 @@ var session = require('express-session');
 var sharedsession = require("express-socket.io-session");
 var morgan = require('morgan');
 var bcrypt = require('bcrypt');
+const cors = require('cors');
+
 const saltRounds = 12;
 var session = require("express-session")({
     key: 'user_sid',
@@ -44,7 +46,13 @@ let timers = {};
 const app = express();
 const port = process.env.PORT || 4001;
 // app.use(index);
-
+const corsOptions = {
+    origin: 'https://odontologiaindependiente.com',
+    credentials: true
+};
+  
+app.use(cors(corsOptions));
+  
 app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(cookieParser());
@@ -144,7 +152,8 @@ app.post('/login', function (req, res) {
             bcrypt.compare(req.body.password, user.password, function (err, result) {
                 if (result == true) {
                     req.session.user = user.dataValues;
-                    users[user.id] = null;
+                    users[user.id] = [];
+                    users[user.id]['socket'] = null;
                     res.json({
                         state: true,
                         message: 'Login exitoso!',
