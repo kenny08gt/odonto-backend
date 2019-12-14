@@ -186,11 +186,12 @@ let server = null;
 var fs = require('fs');
 
 if (process.env.NODE_ENV == 'development') {
+    console.log('DEVELOPMENT')
     app.listen(9000);
     server = http.createServer(app);
     io = socketIo(server);
 
-    server.listen(port, "0.0.0.0", () => console.log(`Listening on port ${port}`));
+    server.listen(port,  () => console.log(`Listening on port ${port}`));
 } else {
     var https = require('https');
     var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
@@ -431,6 +432,7 @@ let deleteUser = (socket) => {
 let handleTimer = function (socket, timeleft, callback) {
     let downloadTimer = setInterval(function () {
         socket.emit('countdownStart', timeleft);
+        console.log('time left ' + timeleft);
         timeleft -= 1;
         if (timeleft <= 0) {
             delete timers[socket.handshake.session.user.id]['timer'];
