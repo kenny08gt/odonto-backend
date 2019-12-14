@@ -184,6 +184,7 @@ app.get('/logout', (req, res) => {
 let io = null;
 let server = null;
 var fs = require('fs');
+
 if (process.env.NODE_ENV == 'development') {
     app.listen(9000);
     server = http.createServer(app);
@@ -198,11 +199,11 @@ if (process.env.NODE_ENV == 'development') {
 
 
     var httpsServer = https.createServer(credentials, app);
-    httpsServer.listen(443, () => console.log(`Listening on port 443`));
 
-    server = https.createServer(credentials, app);
-    io = socketIo(server);
+//    server = https.createServer(credentials, app);
+    io = socketIo.listen(httpsServer);
     
+    httpsServer.listen(443, () => console.log(`Listening on port 443`));
 }
 
 Array.prototype.insert = function (index, item) {
@@ -444,4 +445,4 @@ let handleTimer = function (socket, timeleft, callback) {
 }
 
 
-server.listen(port, () => console.log(`Listening on port ${port}`));
+server.listen(port, "0.0.0.0", () => console.log(`Listening on port ${port}`));
