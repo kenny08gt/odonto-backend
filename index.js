@@ -190,6 +190,7 @@ if (process.env.NODE_ENV == 'development') {
     server = http.createServer(app);
     io = socketIo(server);
 
+    server.listen(port, "0.0.0.0", () => console.log(`Listening on port ${port}`));
 } else {
     var https = require('https');
     var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
@@ -444,5 +445,3 @@ let handleTimer = function (socket, timeleft, callback) {
 
 }
 
-
-server.listen(port, "0.0.0.0", () => console.log(`Listening on port ${port}`));
