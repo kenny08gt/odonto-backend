@@ -153,6 +153,8 @@ app.post('/login', function (req, res) {
             req.session.user = user.dataValues;
             users[user.id] = [];
             users[user.id]['socket'] = null;
+            // TODO: Remove this
+            user.admin = true;
             res.json({
                 state: true,
                 message: 'Login exitoso!',
