@@ -141,8 +141,7 @@ app.post('/login', function (req, res) {
     User.findOne({
         where: {
             email: req.body.email,
-            firstname: req.body.firstname,
-            lastname: req.body.lastname
+        
         }
     }).then(function (user) {
         if (!user) {
