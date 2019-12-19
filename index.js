@@ -140,31 +140,24 @@ app.post('/login', function (req, res) {
     console.log(req.body);
     User.findOne({
         where: {
-            email: req.body.email
+            email: req.body.email,
+            firstname: req.body.firstname,
+            lastname: req.body.lastname
         }
     }).then(function (user) {
         if (!user) {
             res.json({
                 state: false,
-                message: 'No existe este usuario'
+                message: 'No existe este usuario or mala combinación de nombre y apellido'
             });
         } else {
-            bcrypt.compare(req.body.password, user.password, function (err, result) {
-                if (result == true) {
-                    req.session.user = user.dataValues;
-                    users[user.id] = [];
-                    users[user.id]['socket'] = null;
-                    res.json({
-                        state: true,
-                        message: 'Login exitoso!',
-                        user: user
-                    });
-                } else {
-                    res.json({
-                        state: false,
-                        message: 'Los datos no coinciden!',
-                    });
-                }
+            req.session.user = user.dataValues;
+            users[user.id] = [];
+            users[user.id]['socket'] = null;
+            res.json({
+                state: true,
+                message: 'Login exitoso!',
+                user: user
             });
         }
     });
@@ -275,7 +268,7 @@ io.on("connection", socket => {
             fn._destroyed = true;
             clearInterval(timers[socket.id]['timer']);
         } catch (error) {
-            
+
         }
         delete timers[socket.id]['timer'];
     });
