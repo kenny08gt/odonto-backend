@@ -50,9 +50,9 @@ const corsOptions = {
     origin: 'https://odontologiaindependiente.com',
     credentials: true
 };
-  
+
 app.use(cors(corsOptions));
-  
+
 app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(cookieParser());
@@ -191,7 +191,7 @@ if (process.env.NODE_ENV == 'development') {
     server = http.createServer(app);
     io = socketIo(server);
 
-    server.listen(port,  () => console.log(`Listening on port ${port}`));
+    server.listen(port, () => console.log(`Listening on port ${port}`));
 } else {
     var https = require('https');
     var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
@@ -202,9 +202,9 @@ if (process.env.NODE_ENV == 'development') {
 
     var httpsServer = https.createServer(credentials, app);
 
-//    server = https.createServer(credentials, app);
+    //    server = https.createServer(credentials, app);
     io = socketIo.listen(httpsServer);
-    
+
     httpsServer.listen(443, () => console.log(`Listening on port 443`));
 }
 
@@ -270,11 +270,25 @@ io.on("connection", socket => {
     noticeUserConnected(socket);
 
     socket.on("disconnect", () => {
-        deleteUser(socket);
-        clearInterval(timers[socket.handshake.session.user.id]['timer']);
-        delete timers[socket.handshake.session.user.id];
-        console.log("Client disconnected " + socket.handshake.session.user.id);
-        noticeUserConnected();
+        var fn = timers[socket.id]['timer'];
+        try {
+            fn._destroyed = true;
+            clearInterval(timers[socket.id]['timer']);
+        } catch (error) {
+            
+        }
+        delete timers[socket.id]['timer'];
+    });
+
+    socket.on('close-timer', function (data) {
+        var fn = timers[socket.id]['timer'];
+        try {
+            fn._destroyed = true;
+            clearInterval(timers[socket.id]['timer']);
+        } catch (error) {
+
+        }
+        delete timers[socket.id]['timer'];
     });
 
     socket.on('connected', function (data, callback) {
@@ -285,6 +299,7 @@ io.on("connection", socket => {
                     'columna': seat.column,
                     'fila': seat.row,
                     'estado': seat.state === 1 ? 'blocked' : 'sold',
+                    'curso': seat.course,
                     'seccion': seat.section
                 }
             })
@@ -303,7 +318,8 @@ io.on("connection", socket => {
                 where: {
                     row: data.fila,
                     column: data.columna,
-                    section: data.seccion
+                    section: data.seccion,
+                    course: data.curso
                 }
             }).then(function (seat) {
                 if (seat === null) {
@@ -312,6 +328,7 @@ io.on("connection", socket => {
                             row: data.fila,
                             column: data.columna,
                             section: data.seccion,
+                            course: data.curso,
                             state: data.estado == 'bloqueado' ? 1 : 2,
                             transactionl: '',
                         }).then(seat => {
@@ -339,7 +356,8 @@ io.on("connection", socket => {
                 where: {
                     row: data.fila,
                     column: data.columna,
-                    section: data.seccion
+                    section: data.seccion,
+                    course: data.curso,
                 }
             }).then(function (seat) {
                 if (seat === null) {
@@ -363,7 +381,8 @@ io.on("connection", socket => {
                 where: {
                     row: data.fila,
                     column: data.columna,
-                    section: data.seccion
+                    section: data.seccion,
+                    course: data.curso
                 }
             }).then(function (seat) {
                 if (seat === null) {
@@ -397,7 +416,7 @@ io.on("connection", socket => {
         console.log('countdownRestart for socket ' + socket.handshake.session.user.id)
 
         clearInterval(timers[socket.handshake.session.user.id]['timer']);
-        delete timers[socket.handshake.session.user.id];
+        // delete timers[socket.handshake.session.user.id];
 
         var timeleft = 1 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);

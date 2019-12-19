@@ -20,6 +20,7 @@ module.exports = {
         column: Sequelize.INTEGER,
         row: Sequelize.STRING,
         section: Sequelize.STRING,
+        course: Sequelize.STRING,
         state: Sequelize.INTEGER,
         transaction: {
           type: Sequelize.STRING,

@@ -9,6 +9,7 @@ module.exports = function (sequelize, DataTypes) {
         column: DataTypes.INTEGER,
         row: DataTypes.STRING,
         section: DataTypes.STRING,
+        course: DataTypes.STRING,
         state: DataTypes.INTEGER,
         transaction: DataTypes.INTEGER,
     });
