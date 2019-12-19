@@ -34,7 +34,7 @@ module.exports = {
           allowNull: true
         },
         admin: {
-          type: DataTypes.BOOLEAN,
+          type: Sequelize.BOOLEAN,
           defaultValue: false
         },
         password: {
