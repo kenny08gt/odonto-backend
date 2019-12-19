@@ -262,25 +262,26 @@ io.on("connection", socket => {
     noticeUserConnected(socket);
 
     socket.on("disconnect", () => {
-        var fn = timers[socket.id]['timer'];
+        var fn = timers[socket.handshake.session.user.id]['timer'];
         try {
             fn._destroyed = true;
-            clearInterval(timers[socket.id]['timer']);
+            clearInterval(timers[socket.handshake.session.user.id]['timer']);
         } catch (error) {
 
         }
-        delete timers[socket.id]['timer'];
+        delete timers[socket.handshake.session.user.id]['timer'];
     });
 
     socket.on('close-timer', function (data) {
-        var fn = timers[socket.id]['timer'];
+        var fn = timers[socket.handshake.session.user.id]['timer'];
         try {
             fn._destroyed = true;
-            clearInterval(timers[socket.id]['timer']);
+            clearInterval(timers[socket.handshake.session.user.id]['timer']);
+            timers[socket.handshake.session.user.id]['timer'] = null;
         } catch (error) {
 
         }
-        delete timers[socket.id]['timer'];
+        delete timers[socket.handshake.session.user.id]['timer'];
     });
 
     socket.on('connected', function (data, callback) {
@@ -399,17 +400,6 @@ io.on("connection", socket => {
 
     socket.on('countdownStart', function (data, callback) {
         console.log('countdownStart for socket ' + socket.handshake.session.user.id)
-        var timeleft = 1 * 60;
-        var downloadTimer = handleTimer(socket, timeleft, callback);
-        timers[socket.handshake.session.user.id]['timer'] = downloadTimer;
-    })
-
-    socket.on('countdownRestart', function (data, callback) {
-        console.log('countdownRestart for socket ' + socket.handshake.session.user.id)
-
-        clearInterval(timers[socket.handshake.session.user.id]['timer']);
-        // delete timers[socket.handshake.session.user.id];
-
         var timeleft = 1 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
         timers[socket.handshake.session.user.id]['timer'] = downloadTimer;
