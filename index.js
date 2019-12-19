@@ -137,7 +137,6 @@ app.post('/register', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
-    console.log(req.body);
     User.findOne({
         where: {
             email: req.body.email,
@@ -155,6 +154,7 @@ app.post('/login', function (req, res) {
             users[user.id]['socket'] = null;
             // TODO: Remove this
             user.admin = true;
+            console.log(user);
             res.json({
                 state: true,
                 message: 'Login exitoso!',
