@@ -18,7 +18,8 @@ module.exports = function (sequelize, DataTypes) {
         comment: DataTypes.STRING,
         register_number: DataTypes.STRING,
         university: DataTypes.STRING,
-        password: DataTypes.STRING
+        password: DataTypes.STRING,
+        admin: DataTypes.BOOLEAN
     });
 
     return User;
