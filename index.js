@@ -244,7 +244,7 @@ const seatModified = async data => {
 }
 
 io.on("connection", socket => {
-
+    timers[socket.id] = {};
     if (!socket.handshake.session.user) {
         console.log('user not logged in')
         return false;
