@@ -371,15 +371,15 @@ io.on("connection", socket => {
     });
 
     socket.on('close-timer', function (data) {
-        var fn = timers[socket.handshake.session.user.id]['timer'];
+        // var fn = timers[socket.handshake.session.user.id]['timer'];
         try {
-            fn._destroyed = true;
-            clearInterval(timers[socket.handshake.session.user.id]['timer']);
-            timers[socket.handshake.session.user.id]['timer'] = null;
+            // fn._destroyed = true;
+            // clearInterval(timers[socket.handshake.session.user.id]['timer']);
+            // timers[socket.handshake.session.user.id]['timer'] = null;
         } catch (error) {
 
         }
-        delete timers[socket.handshake.session.user.id]['timer'];
+        // delete timers[socket.handshake.session.user.id]['timer'];
     });
 
     socket.on('connected', function (data, callback) {
