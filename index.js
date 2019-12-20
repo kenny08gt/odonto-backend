@@ -216,7 +216,60 @@ app.post('/report', (req, res) => {
 
 //TODO implement save the order from the frontend
 app.post('/save_order', (req, res) => {
-
+    let seats = req.body.seats;
+    for (var seat in seats) {
+        if (seats.hasOwnProperty(seat)) {
+            Seat.findOne({
+                where: {
+                    row: seat.fila,
+                    column: seat.columna,
+                    section: seat.seccion,
+                    course: seat.curso
+                }
+            }).then(function (seat) {
+                if (seat === null) {
+                    Seat.create(
+                        {
+                            row: seat.fila,
+                            column: seat.columna,
+                            section: seat.seccion,
+                            course: seat.curso,
+                            state: 0,
+                            'name': seat.name,
+                            'register_number': seat.register_number,
+                            'university': seat.university,
+                            'no_document': seat.no_document
+                        }).then(seat => {
+                            res.json({
+                                status: true,
+                                message: 'Order salvada',
+                                seat: seat,
+                            })
+                        })
+                } else {
+                    seat.destroy();
+                    Seat.create(
+                        {
+                            row: seat.fila,
+                            column: seat.columna,
+                            section: seat.seccion,
+                            course: seat.curso,
+                            state: 0,
+                            'name': seat.name,
+                            'register_number': seat.register_number,
+                            'university': seat.university,
+                            'no_document': seat.no_document
+                        }).then(seat => {
+                            res.json({
+                                status: true,
+                                message: 'Order salvada',
+                                seat: seat,
+                            })
+                        })
+                }
+            });
+        }
+    }
 });
 
 let io = null;
