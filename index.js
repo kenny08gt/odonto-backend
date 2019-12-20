@@ -137,6 +137,7 @@ app.post('/register', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
+    console.log("name: " + req.body.firstname + ", lastname: " + req.body.lastname)
     User.findOne({
         where: {
             email: req.body.email,
