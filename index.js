@@ -175,6 +175,50 @@ app.get('/logout', (req, res) => {
     }
 });
 
+app.post('/report', (req, res) => {
+    console.log('report get');
+    // if (req.session.user && req.cookies.user_sid && !req.session.user.admin) {
+    //     res.redirect('/');
+    // } else {
+        Seat.findAll({
+            where: {
+                state: 0, // Estado vendido
+            }
+        }).then(function (seats) {
+            if (seats === null) {
+               res.json({
+                   state: false,
+                   message: 'Asientos no encontrados'
+               })
+            } else {
+                seats = seats.map(function (seat) {
+                    return {
+                        'columna': seat.column,
+                        'fila': seat.row,
+                        'estado': seat.state === 1 ? 'blocked' : 'sold',
+                        'curso': seat.course,
+                        'seccion': seat.section,
+                        'name': seat.name,
+                        'register_number': seat.register_number,
+                        'university': seat.university,
+                        'no_document': seat.no_document
+                    }
+                })
+                res.json({
+                    state: true,
+                    message: 'Todos los asientos',
+                    seats: seats
+                })
+            }
+        });
+    // }
+});
+
+//TODO implement save the order from the frontend
+app.post('/save_order', (req, res) => {
+
+});
+
 let io = null;
 let server = null;
 var fs = require('fs');

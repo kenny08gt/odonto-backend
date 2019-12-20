@@ -12,6 +12,11 @@ module.exports = function (sequelize, DataTypes) {
         course: DataTypes.STRING,
         state: DataTypes.INTEGER,
         transaction: DataTypes.INTEGER,
+        precio: DataTypes.FLOAT,
+        name: DataTypes.STRING,
+        register_number: DataTypes.STRING,
+        university: DataTypes.STRING,
+        no_document: DataTypes.STRING,
     });
 
     return Seat;

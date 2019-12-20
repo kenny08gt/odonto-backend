@@ -22,6 +22,26 @@ module.exports = {
         section: Sequelize.STRING,
         course: Sequelize.STRING,
         state: Sequelize.INTEGER,
+        precio: {
+          type: Sequelize.FLOAT,
+          allowNull: true
+        },
+        name: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
+        register_number: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },//colegiado o carnet,
+        university: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
+        no_document: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
         transaction: {
           type: Sequelize.STRING,
           allowNull: true
