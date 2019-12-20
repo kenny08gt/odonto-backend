@@ -343,44 +343,6 @@ const seatModified = async data => {
 
 io.on("connection", socket => {
     timers[socket.id] = {};
-    // if (!socket.handshake.session.user) {
-    //     console.log('user not logged in')
-    //     return false;
-    // }
-
-    // let address = socket.handshake.address;
-    // console.log("New client connected " + socket.handshake.session.user.id + ", ip: " + address);
-    // console.log(socket.handshake.session);
-
-    // users.push(socket);
-    // if (socket.handshake.session.user)
-        // users[socket.handshake.session.user.id]['socket'] = socket;
-
-    // timers[socket.handshake.session.user.id] = {};
-    noticeUserConnected(socket);
-
-    socket.on("disconnect", () => {
-        // var fn = timers[socket.handshake.session.user.id]['timer'];
-        try {
-            // fn._destroyed = true;
-            // clearInterval(timers[socket.handshake.session.user.id]['timer']);
-        } catch (error) {
-
-        }
-        // delete timers[socket.handshake.session.user.id]['timer'];
-    });
-
-    socket.on('close-timer', function (data) {
-        // var fn = timers[socket.handshake.session.user.id]['timer'];
-        try {
-            // fn._destroyed = true;
-            // clearInterval(timers[socket.handshake.session.user.id]['timer']);
-            // timers[socket.handshake.session.user.id]['timer'] = null;
-        } catch (error) {
-
-        }
-        // delete timers[socket.handshake.session.user.id]['timer'];
-    });
 
     socket.on('connected', function (data, callback) {
         console.log('connected from frontend');
@@ -398,6 +360,46 @@ io.on("connection", socket => {
         }).catch(function (err) {
             callback({});
         });;
+    });
+
+
+    if (!socket.handshake.session.user) {
+        console.log('user not logged in')
+        return false;
+    }
+
+    let address = socket.handshake.address;
+    console.log("New client connected " + socket.handshake.session.user.id + ", ip: " + address);
+    console.log(socket.handshake.session);
+
+    users.push(socket);
+    if (socket.handshake.session.user)
+        users[socket.handshake.session.user.id]['socket'] = socket;
+
+    timers[socket.handshake.session.user.id] = {};
+    noticeUserConnected(socket);
+
+    socket.on("disconnect", () => {
+        var fn = timers[socket.handshake.session.user.id]['timer'];
+        try {
+            fn._destroyed = true;
+            clearInterval(timers[socket.handshake.session.user.id]['timer']);
+        } catch (error) {
+
+        }
+        delete timers[socket.handshake.session.user.id]['timer'];
+    });
+
+    socket.on('close-timer', function (data) {
+        var fn = timers[socket.handshake.session.user.id]['timer'];
+        try {
+            fn._destroyed = true;
+            clearInterval(timers[socket.handshake.session.user.id]['timer']);
+            timers[socket.handshake.session.user.id]['timer'] = null;
+        } catch (error) {
+
+        }
+        delete timers[socket.handshake.session.user.id]['timer'];
     });
 
     socket.on('seatModified', function (data, callback) {
