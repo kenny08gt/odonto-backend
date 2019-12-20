@@ -206,7 +206,7 @@ app.post('/report', (req, res) => {
             res.json({
                 state: true,
                 message: 'Todos los asientos',
-                seats: seats
+                seats_solds: seats
             })
         }
     });
