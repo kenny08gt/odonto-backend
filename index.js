@@ -442,7 +442,7 @@ io.on("connection", socket => {
                             column: data.columna,
                             section: data.seccion,
                             course: data.curso,
-                            state: data.estado == 'bloqueado' ? 1 : 2,
+                            state: data.estado == 'blocked' ? 1 : 2,
                             transactionl: '',
                         }).then(seat => {
 
