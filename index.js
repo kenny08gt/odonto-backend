@@ -219,6 +219,7 @@ app.post('/save_order', (req, res) => {
     console.log('save order ',seats);
     for (var seat in seats) {
         if (seats.hasOwnProperty(seat)) {
+            console.log(seat);
             Seat.findOne({
                 where: {
                     row: seat.fila,
