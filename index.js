@@ -216,6 +216,7 @@ app.post('/report', (req, res) => {
 //TODO implement save the order from the frontend
 app.post('/save_order', (req, res) => {
     let seats = req.body.seats;
+    console.log('save order ',seats);
     for (var seat in seats) {
         if (seats.hasOwnProperty(seat)) {
             Seat.findOne({
