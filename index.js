@@ -244,6 +244,13 @@ app.post('/save_order', (req, res) => {
                             'no_document': seat.no_document,
                             'precio' : seat.precio
                         }).then(seat => {
+                            seatModified({
+                                'columna': seat.column,
+                                'fila': seat.row,
+                                'estado': seat.state === 1 ? 'blocked' : 'sold',
+                                'curso': seat.course,
+                                'seccion': seat.section
+                            });
                             res.json({
                                 status: true,
                                 message: 'Order salvada',
@@ -265,6 +272,13 @@ app.post('/save_order', (req, res) => {
                             'no_document': seat.no_document,
                             'precio' : seat.precio
                         }).then(seat => {
+                            seatModified({
+                                'columna': seat.column,
+                                'fila': seat.row,
+                                'estado': seat.state === 1 ? 'blocked' : 'sold',
+                                'curso': seat.course,
+                                'seccion': seat.section
+                            });
                             res.json({
                                 status: true,
                                 message: 'Order salvada',
