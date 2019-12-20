@@ -360,14 +360,14 @@ io.on("connection", socket => {
     noticeUserConnected(socket);
 
     socket.on("disconnect", () => {
-        var fn = timers[socket.handshake.session.user.id]['timer'];
+        // var fn = timers[socket.handshake.session.user.id]['timer'];
         try {
-            fn._destroyed = true;
-            clearInterval(timers[socket.handshake.session.user.id]['timer']);
+            // fn._destroyed = true;
+            // clearInterval(timers[socket.handshake.session.user.id]['timer']);
         } catch (error) {
 
         }
-        delete timers[socket.handshake.session.user.id]['timer'];
+        // delete timers[socket.handshake.session.user.id]['timer'];
     });
 
     socket.on('close-timer', function (data) {
