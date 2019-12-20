@@ -343,20 +343,20 @@ const seatModified = async data => {
 
 io.on("connection", socket => {
     timers[socket.id] = {};
-    if (!socket.handshake.session.user) {
-        console.log('user not logged in')
-        return false;
-    }
+    // if (!socket.handshake.session.user) {
+    //     console.log('user not logged in')
+    //     return false;
+    // }
 
-    let address = socket.handshake.address;
-    console.log("New client connected " + socket.handshake.session.user.id + ", ip: " + address);
-    console.log(socket.handshake.session);
+    // let address = socket.handshake.address;
+    // console.log("New client connected " + socket.handshake.session.user.id + ", ip: " + address);
+    // console.log(socket.handshake.session);
 
     // users.push(socket);
-    if (socket.handshake.session.user)
-        users[socket.handshake.session.user.id]['socket'] = socket;
+    // if (socket.handshake.session.user)
+        // users[socket.handshake.session.user.id]['socket'] = socket;
 
-    timers[socket.handshake.session.user.id] = {};
+    // timers[socket.handshake.session.user.id] = {};
     noticeUserConnected(socket);
 
     socket.on("disconnect", () => {
