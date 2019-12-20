@@ -506,7 +506,7 @@ io.on("connection", socket => {
 
     socket.on('countdownStart', function (data, callback) {
         console.log('countdownStart for socket ' + socket.handshake.session.user.id)
-        var timeleft = 1 * 60;
+        var timeleft = 10 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
         timers[socket.handshake.session.user.id]['timer'] = downloadTimer;
     })
