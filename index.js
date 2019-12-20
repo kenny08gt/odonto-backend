@@ -217,8 +217,10 @@ app.post('/report', (req, res) => {
 app.post('/save_order', (req, res) => {
     let seats = req.body.seats;
     console.log('save order ',seats);
-    for (var seat in seats) {
-        if (seats.hasOwnProperty(seat)) {
+    for (var key in seats) {
+        console.log('key '+ key);
+        if (seats.hasOwnProperty(key)) {
+            seat = seats[key];
             console.log(seat);
             Seat.findOne({
                 where: {
