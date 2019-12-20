@@ -101,37 +101,34 @@ app.post('/register', function (req, res) {
                 message: 'El usuario ya existe'
             });
         } else {
-            bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
-                User.create({
-                    firstname: req.body.firstanme,
-                    lastname: req.body.lastname,
-                    telephone: req.body.telephone,
-                    email: req.body.email,
-                    comment: req.body.comment,
-                    register_number: req.body.register_number,
-                    university: req.body.university,
-                    password: hash
-                }).then(function () {
-                    User.findOrCreate(
-                        {
-                            where: {
-                                email: req.body.email
-                            }
-                        }).spread(function (user, created) {
-                            console.log(user.get({
-                                plain: true
-                            }))
-                            console.log(created)
-                            req.session.user = user.dataValues;
-                            res.json({
-                                state: true,
-                                message: 'Registro exitoso!',
-                                user: user
-                            });
-                        })
-                })
-
-            });
+            User.create({
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                telephone: req.body.telephone,
+                email: req.body.email,
+                comment: req.body.comment,
+                register_number: req.body.register_number,
+                university: req.body.university,
+                password: ''
+            }).then(function () {
+                User.findOrCreate(
+                    {
+                        where: {
+                            email: req.body.email
+                        }
+                    }).spread(function (user, created) {
+                        console.log(user.get({
+                            plain: true
+                        }))
+                        console.log(created)
+                        req.session.user = user.dataValues;
+                        res.json({
+                            state: true,
+                            message: 'Registro exitoso!',
+                            user: user
+                        });
+                    })
+            })
         }
     });
 });
@@ -182,37 +179,37 @@ app.post('/report', (req, res) => {
     // if (req.session.user && req.cookies.user_sid && !req.session.user.admin) {
     //     res.redirect('/');
     // } else {
-        Seat.findAll({
-            where: {
-                state: 0, // Estado vendido
-            }
-        }).then(function (seats) {
-            if (seats === null) {
-               res.json({
-                   state: false,
-                   message: 'Asientos no encontrados'
-               })
-            } else {
-                seats = seats.map(function (seat) {
-                    return {
-                        'columna': seat.column,
-                        'fila': seat.row,
-                        'estado': seat.state === 1 ? 'blocked' : 'sold',
-                        'curso': seat.course,
-                        'seccion': seat.section,
-                        'name': seat.name,
-                        'register_number': seat.register_number,
-                        'university': seat.university,
-                        'no_document': seat.no_document
-                    }
-                })
-                res.json({
-                    state: true,
-                    message: 'Todos los asientos',
-                    seats: seats
-                })
-            }
-        });
+    Seat.findAll({
+        where: {
+            state: 0, // Estado vendido
+        }
+    }).then(function (seats) {
+        if (seats === null) {
+            res.json({
+                state: false,
+                message: 'Asientos no encontrados'
+            })
+        } else {
+            seats = seats.map(function (seat) {
+                return {
+                    'columna': seat.column,
+                    'fila': seat.row,
+                    'estado': seat.state === 1 ? 'blocked' : 'sold',
+                    'curso': seat.course,
+                    'seccion': seat.section,
+                    'name': seat.name,
+                    'register_number': seat.register_number,
+                    'university': seat.university,
+                    'no_document': seat.no_document
+                }
+            })
+            res.json({
+                state: true,
+                message: 'Todos los asientos',
+                seats: seats
+            })
+        }
+    });
     // }
 });
 
