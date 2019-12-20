@@ -229,8 +229,8 @@ app.post('/save_order', (req, res) => {
                     section: seat.seccion,
                     course: seat.curso
                 }
-            }).then(function (seat) {
-                if (seat === null) {
+            }).then(function (seat_old) {
+                if (seat_old === null) {
                     Seat.create(
                         {
                             row: seat.fila,
@@ -251,7 +251,7 @@ app.post('/save_order', (req, res) => {
                             })
                         })
                 } else {
-                    seat.destroy();
+                    seat_old.destroy();
                     Seat.create(
                         {
                             row: seat.fila,
