@@ -237,7 +237,8 @@ app.post('/save_order', (req, res) => {
                             'name': seat.name,
                             'register_number': seat.register_number,
                             'university': seat.university,
-                            'no_document': seat.no_document
+                            'no_document': seat.no_document,
+                            'price' : seat.precio
                         }).then(seat => {
                             res.json({
                                 status: true,
@@ -257,7 +258,8 @@ app.post('/save_order', (req, res) => {
                             'name': seat.name,
                             'register_number': seat.register_number,
                             'university': seat.university,
-                            'no_document': seat.no_document
+                            'no_document': seat.no_document,
+                            'precio' : seat.precio
                         }).then(seat => {
                             res.json({
                                 status: true,
