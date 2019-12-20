@@ -239,7 +239,7 @@ app.post('/save_order', (req, res) => {
                             'register_number': seat.register_number,
                             'university': seat.university,
                             'no_document': seat.no_document,
-                            'price' : seat.precio
+                            'precio' : seat.precio
                         }).then(seat => {
                             res.json({
                                 status: true,
@@ -536,7 +536,7 @@ let deleteUser = (socket) => {
 let handleTimer = function (socket, timeleft, callback) {
     let downloadTimer = setInterval(function () {
         socket.emit('countdownStart', timeleft);
-        console.log('time left ' + timeleft);
+        // console.log('time left ' + timeleft);
         timeleft -= 1;
         if (timeleft <= 0) {
             delete timers[socket.handshake.session.user.id]['timer'];
