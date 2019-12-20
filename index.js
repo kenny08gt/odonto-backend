@@ -372,7 +372,7 @@ io.on("connection", socket => {
     console.log("New client connected " + socket.handshake.session.user.id + ", ip: " + address);
     console.log(socket.handshake.session);
 
-    users.push(socket);
+    // users.push(socket);
     if (socket.handshake.session.user)
         users[socket.handshake.session.user.id]['socket'] = socket;
 
