@@ -123,8 +123,8 @@ app.post('/login', function (req, res) {
                 message: 'No existe este usuario or mala combinación de nombre y apellido'
             });
         } else {
-            req.session.user = user.dataValues;
-            users[user.id] = [];
+            //req.session.user = user.dataValues;
+            users[user.id] = {};
             users[user.id]['socket'] = null;
             // TODO: Remove this
             user.admin = true;
@@ -140,13 +140,8 @@ app.post('/login', function (req, res) {
 
 // route for user logout
 app.get('/logout', (req, res) => {
-    if (req.session.user && req.cookies.user_sid) {
-        delete users[res.session.user.id];
-        res.clearCookie('user_sid');
+   
         res.redirect('/');
-    } else {
-        res.redirect('/login');
-    }
 });
 
 app.post('/report', (req, res) => {
@@ -398,7 +393,8 @@ io.on("connection", socket => {
     });
 
     socket.on('seatModified', function (data, callback) {
-
+        console.log('seatModified event');
+        console.log(data);
         let user = data.user;
 
         if(user == null) {
