@@ -546,7 +546,7 @@ let handleTimer = function (socket, timeleft, callback) {
         // console.log('time left ' + timeleft);
         timeleft -= 1;
         if (timeleft <= 0) {
-            delete timers[socket.handshake.session.user.id]['timer'];
+//            delete timers[socket.handshake.session.user.id]['timer'];
 
             clearInterval(downloadTimer);
             callback('countdown finished');
