@@ -359,8 +359,9 @@ io.on("connection", socket => {
     socket.on("disconnect", (data) => {
         let user = data.user;
 
-        if(user === undefined) {
+        if(user == null) {
             console.log('Event disconnect, user undefined');
+            return false;
         }
 
         var fn = timers[user.id]['timer'];
