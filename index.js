@@ -37,6 +37,21 @@ var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, 
 let Seat = require("./models/Seat")(sequelize, DataTypes);
 let User = require("./models/User")(sequelize, DataTypes);
 
+// Delete asientos bloqueados que se quedaron clonados
+Seat.findAll({
+    where: {
+        state: 1, // Estado bloqueado
+    }
+}).then(function (seats) {
+    console.log('delete seats bloqueados');
+    if (seats !== null) {
+        seats.forEach(seat => {
+            console.log('borrar asiento ',seat);
+           seat.destroy();
+       });
+    } 
+});
+
 let users = {};
 let timers = {};
 let sockets = {};
@@ -422,7 +437,7 @@ io.on("connection", socket => {
                             column: data.columna,
                             section: data.seccion,
                             course: data.curso,
-                            state: data.estado == 'blocked' ? 1 : 2,
+                            state: data.estado == 'blocked' ? 1 : 0,
                             transactionl: '',
                         }).then(seat => {
 
