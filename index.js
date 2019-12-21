@@ -337,6 +337,7 @@ io.on("connection", socket => {
         let user = data.user;
         console.log(data);
         if(user != null) {
+            users[user.id] = {}
             users[user.id]['socket'] = socket;
             timers[user.id] = {};
         }
