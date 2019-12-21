@@ -376,14 +376,15 @@ io.on("connection", socket => {
 
     socket.on('close-timer', function (data) {
         let user = data.user;
-
+        console.log('close-timer');
+        console.log(data);
         if(user == null) {
             console.log('Event close-time, user undefined');
             return false;
         }
 
-        var fn = timers[user.id]['timer'];
         try {
+            var fn = timers[user.id]['timer'];
             fn._destroyed = true;
             clearInterval(timers[user.id]['timer']);
             timers[user.id]['timer'] = null;
