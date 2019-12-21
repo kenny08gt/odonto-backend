@@ -510,7 +510,7 @@ console.log(data);
         console.log('countdownStart for socket ' + user.id)
         var timeleft = 10 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
-        if(timers[user.id] !== undefinde) {
+        if(timers[user.id] !== undefined) {
             timers[user.id]['timer'] = downloadTimer;
         }
     })
