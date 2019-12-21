@@ -388,10 +388,11 @@ io.on("connection", socket => {
             fn._destroyed = true;
             clearInterval(timers[user.id]['timer']);
             timers[user.id]['timer'] = null;
+            delete timers[user.id]['timer'];
         } catch (error) {
-
+            console.log('Catch close timer ')
+            console.log(error);
         }
-        delete timers[user.id]['timer'];
     });
 
     socket.on('seatModified', function (data, callback) {
