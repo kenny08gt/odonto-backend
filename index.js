@@ -320,7 +320,7 @@ const seatModified = async data => {
             if (sockets.hasOwnProperty(key)) {
                 console.log(key + " -> " + sockets[key]);
                 socket_ = sockets[key];
-                socket_['socket'].emit('newSeatModified', data);
+                socket_.emit('newSeatModified', data);
             }
         }
     } catch (error) {
@@ -332,10 +332,11 @@ const seatModified = async data => {
 
 io.on("connection", socket => {
     timers[socket.id] = {};
-    sockets[socket.id] = {socket};
+    sockets[socket.id] = socket;
     socket.on('connected', function (data, callback) {
         let user = data.user;
-        if(user !== undefined) {
+        console.log(data);
+        if(user != null) {
             users[user.id]['socket'] = socket;
             timers[user.id] = {};
         }
