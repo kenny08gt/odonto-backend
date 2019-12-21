@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+var nodemailer = require('nodemailer');
 const express = require('express');
 const http = require("http");
 const path = require('path');
@@ -125,6 +125,15 @@ app.post('/register', function (req, res) {
 
 app.post('/login', function (req, res) {
     console.log("name: " + req.body.firstname + ", lastname: " + req.body.lastname)
+    if(req.body.email != 'erickimpladent@gmail.com') {
+        res.join({
+            state: false,
+            message: 'El correo no es correcto!',
+            user: null
+        })
+
+        return false;
+    }
     User.findOne({
         where: {
             email: req.body.email,
@@ -275,6 +284,28 @@ app.post('/save_order', (req, res) => {
         }
     }
 });
+
+app.post('/sendEmail', function (req, res) {
+    const { mailOptions } = req.body;
+    console.log(mailOptions);
+    if(mailOptions){
+      var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'rluis4490@gmail.com',
+          pass: 'lamaravilla.net123'
+        }
+      });
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+          res.json(error);
+        } else {
+          res.json({message: 'Email sent: ' + info.response});
+        }
+      });
+    }
+  });
 
 let io = null;
 let server = null;
