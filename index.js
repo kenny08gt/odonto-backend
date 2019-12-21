@@ -500,7 +500,8 @@ io.on("connection", socket => {
 
     socket.on('countdownStart', function (data, callback) {
         let user = data.user;
-
+console.log('countdownStart')
+console.log(data);
         if(user == null) {
             console.log('Event countdownStart, user undefined');
             return false;
@@ -509,7 +510,9 @@ io.on("connection", socket => {
         console.log('countdownStart for socket ' + user.id)
         var timeleft = 10 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
-        timers[user.id]['timer'] = downloadTimer;
+        if(timers[user.id] !== undefinde) {
+            timers[user.id]['timer'] = downloadTimer;
+        }
     })
 });
 
