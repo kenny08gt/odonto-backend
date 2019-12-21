@@ -8,8 +8,6 @@ const axios = require("axios");
 const index = require("./routes/index");
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
-var session = require('express-session');
-var sharedsession = require("express-socket.io-session");
 var morgan = require('morgan');
 var bcrypt = require('bcrypt');
 const cors = require('cors');
@@ -41,6 +39,7 @@ let User = require("./models/User")(sequelize, DataTypes);
 
 let users = {};
 let timers = {};
+let sockets = {};
 
 //const sequelize = require("./connection");
 const app = express();
@@ -57,31 +56,7 @@ app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(cookieParser());
 
-// initialize express-session to allow us track the logged-in user across sessions.
-app.use(session);
-
-
-
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-
-// This middleware will check if user's cookie is still saved in browser and user is not set, then automatically log the user out.
-// This usually happens when you stop your express server after login, your cookie still remains saved in the browser.
-app.use((req, res, next) => {
-    if (req.cookies.user_sid && !req.session.user) {
-        res.clearCookie('user_sid');
-    }
-    next();
-});
-
-
-// middleware function to check for logged-in users
-var sessionChecker = (req, res, next) => {
-    if (req.session.user && req.cookies.user_sid) {
-        res.redirect('/');
-    } else {
-        next();
-    }
-};
 
 
 app.get('/*', function (req, res) {
@@ -309,7 +284,6 @@ if (process.env.NODE_ENV == 'development') {
     var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
     var credentials = { key: privateKey, cert: certificate, ca: dad };
 
-
     var httpsServer = https.createServer(credentials, app);
 
     //    server = https.createServer(credentials, app);
@@ -321,11 +295,6 @@ if (process.env.NODE_ENV == 'development') {
 Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
 };
-
-io.use(sharedsession(session, {
-    autoSave: true
-}));
-
 
 const noticeUserConnected = async socket => {
     try {
@@ -346,12 +315,12 @@ const noticeUserConnected = async socket => {
 
 const seatModified = async data => {
     try {
-        console.log('users ' + Object.keys(users).length);
-        for (var key in users) {
-            if (users.hasOwnProperty(key)) {
-                console.log(key + " -> " + users[key]);
-                user = users[key];
-                user['socket'].emit('newSeatModified', data);
+        console.log('sockets ' + Object.keys(sockets).length);
+        for (var key in sockets) {
+            if (sockets.hasOwnProperty(key)) {
+                console.log(key + " -> " + sockets[key]);
+                socket_ = sockets[key];
+                socket_['socket'].emit('newSeatModified', data);
             }
         }
     } catch (error) {
@@ -363,8 +332,14 @@ const seatModified = async data => {
 
 io.on("connection", socket => {
     timers[socket.id] = {};
-
+    sockets[socket.id] = {socket};
     socket.on('connected', function (data, callback) {
+        let user = data.user;
+        if(user !== undefined) {
+            users[user.id]['socket'] = socket;
+            timers[user.id] = {};
+        }
+
         console.log('connected from frontend');
         let seats = Seat.findAll().then(function (seats) {
             seats = seats.map(function (seat) {
@@ -375,55 +350,59 @@ io.on("connection", socket => {
                     'curso': seat.course,
                     'seccion': seat.section
                 }
-            })
+            });
             callback(seats);
         }).catch(function (err) {
             callback({});
         });;
     });
-
-
-    if (!socket.handshake.session.user) {
-        console.log('user not logged in')
-        return false;
-    }
-
-    let address = socket.handshake.address;
-    console.log("New client connected " + socket.handshake.session.user.id + ", ip: " + address);
-    console.log(socket.handshake.session);
-
-    // users.push(socket);
-    if (socket.handshake.session.user)
-        users[socket.handshake.session.user.id]['socket'] = socket;
-
-    timers[socket.handshake.session.user.id] = {};
+    
     noticeUserConnected(socket);
 
-    socket.on("disconnect", () => {
-        var fn = timers[socket.handshake.session.user.id]['timer'];
+    socket.on("disconnect", (data) => {
+        let user = data.user;
+
+        if(user === undefined) {
+            console.log('Event disconnect, user undefined');
+        }
+
+        var fn = timers[user.id]['timer'];
         try {
             fn._destroyed = true;
-            clearInterval(timers[socket.handshake.session.user.id]['timer']);
+            clearInterval(timers[user.id]['timer']);
         } catch (error) {
 
         }
-        delete timers[socket.handshake.session.user.id]['timer'];
+        delete timers[user.id]['timer'];
     });
 
     socket.on('close-timer', function (data) {
-        var fn = timers[socket.handshake.session.user.id]['timer'];
+        let user = data.user;
+
+        if(user == null) {
+            console.log('Event close-time, user undefined');
+            return false;
+        }
+
+        var fn = timers[user.id]['timer'];
         try {
             fn._destroyed = true;
-            clearInterval(timers[socket.handshake.session.user.id]['timer']);
-            timers[socket.handshake.session.user.id]['timer'] = null;
+            clearInterval(timers[user.id]['timer']);
+            timers[user.id]['timer'] = null;
         } catch (error) {
 
         }
-        delete timers[socket.handshake.session.user.id]['timer'];
+        delete timers[user.id]['timer'];
     });
 
     socket.on('seatModified', function (data, callback) {
-        console.log('seat modified ', data);
+
+        let user = data.user;
+
+        if(user == null) {
+            console.log('Event seatModified, user undefined');
+            return false;
+        }
 
         if (data.estado === 'blocked') {
             console.log(Seat);
@@ -446,10 +425,10 @@ io.on("connection", socket => {
                             transactionl: '',
                         }).then(seat => {
 
-                            if (!timers[socket.handshake.session.user.id]['seats']) {
-                                timers[socket.handshake.session.user.id]['seats'] = [];
+                            if (!timers[user.id]['seats']) {
+                                timers[user.id]['seats'] = [];
                             }
-                            timers[socket.handshake.session.user.id]['seats'].push(data)
+                            timers[user.id]['seats'].push(data)
 
                             callback({
                                 status: true,
@@ -519,10 +498,17 @@ io.on("connection", socket => {
     });
 
     socket.on('countdownStart', function (data, callback) {
-        console.log('countdownStart for socket ' + socket.handshake.session.user.id)
+        let user = data.user;
+
+        if(user == null) {
+            console.log('Event countdownStart, user undefined');
+            return false;
+        }
+
+        console.log('countdownStart for socket ' + user.id)
         var timeleft = 10 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
-        timers[socket.handshake.session.user.id]['timer'] = downloadTimer;
+        timers[user.id]['timer'] = downloadTimer;
     })
 });
 
