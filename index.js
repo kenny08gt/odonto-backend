@@ -61,7 +61,7 @@ const app = express();
 const port = process.env.PORT || 4001;
 // app.use(index);
 const corsOptions = {
-    origin: 'https://odontologiaindependiente.com',
+    origin: true,
     credentials: true
 };
 
@@ -124,16 +124,8 @@ app.post('/register', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
-    console.log("name: " + req.body.firstname + ", lastname: " + req.body.lastname)
-    if(req.body.email != 'erickimpladent@gmail.com') {
-        res.join({
-            state: false,
-            message: 'El correo no es correcto!',
-            user: null
-        })
-
-        return false;
-    }
+    console.log("name: " + req.body.firstname + ", lastname: " + req.body.lastname);
+    var isAdmin =req.body.email == 'erickimpladent@gmail.com';
     User.findOne({
         where: {
             email: req.body.email,
@@ -151,7 +143,7 @@ app.post('/login', function (req, res) {
             users[user.id] = {};
             users[user.id]['socket'] = null;
             // TODO: Remove this
-            user.admin = true;
+            user.admin = isAdmin;
             console.log(user);
             res.json({
                 state: true,
