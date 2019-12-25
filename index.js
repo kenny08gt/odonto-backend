@@ -272,7 +272,7 @@ app.post('/save_order',  async (req, res) => {
         res.json({
             status: false,
             message: 'Error al guardar asientos',
-            seat: seat,
+            seat: null,
         });    
     }
 });
