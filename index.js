@@ -143,7 +143,7 @@ app.post('/login', function (req, res) {
             users[user.id] = {};
             users[user.id]['socket'] = null;
             // TODO: Remove this
-            user.admin = isAdmin;
+//            user.admin = isAdmin;
             console.log(user);
             res.json({
                 state: true,
