@@ -200,80 +200,80 @@ app.post('/report', (req, res) => {
 });
 
 //TODO implement save the order from the frontend
-app.post('/save_order', (req, res) => {
+app.post('/save_order',  async (req, res) => {
     let seats = req.body.seats;
     console.log('save order ',seats);
-    for (var key in seats) {
-        console.log('key '+ key);
-        if (seats.hasOwnProperty(key)) {
-            seat = seats[key];
-            console.log(seat);
-            Seat.findOne({
-                where: {
-                    row: seat.fila,
-                    column: seat.columna,
-                    section: seat.seccion,
-                    course: seat.curso
-                }
-            }).then(function (seat_old) {
+    try {
+        for (var key in seats) {
+            console.log('key '+ key);
+            if (seats.hasOwnProperty(key)) {
+                seat = seats[key];
+                console.log(seat);
+                let seat_old = await Seat.findOne({
+                    where: {
+                        row: seat.fila,
+                        column: seat.columna,
+                        section: seat.seccion,
+                        course: seat.curso
+                    }
+                });
                 if (seat_old === null) {
-                    Seat.create(
-                        {
-                            row: seat.fila,
-                            column: seat.columna,
-                            section: seat.seccion,
-                            course: seat.curso,
-                            state: 0,
-                            'name': seat.name,
-                            'register_number': seat.register_number,
-                            'university': seat.university,
-                            'no_document': seat.no_document,
-                            'precio' : seat.precio
-                        }).then(seat => {
-                            seatModified({
-                                'columna': seat.column,
-                                'fila': seat.row,
-                                'estado': seat.state === 1 ? 'blocked' : 'sold',
-                                'curso': seat.course,
-                                'seccion': seat.section
-                            });
-                            res.json({
-                                status: true,
-                                message: 'Order salvada',
-                                seat: seat,
-                            })
-                        })
+                   let seatCreated = await  Seat.create({
+                        row: seat.fila,
+                        column: seat.columna,
+                        section: seat.seccion,
+                        course: seat.curso,
+                        state: 0,
+                        'name': seat.name,
+                        'register_number': seat.register_number,
+                        'university': seat.university,
+                        'no_document': seat.no_document,
+                        'precio' : seat.precio
+                    });
+                    const {column, row, state, course, section} = seatCreated;
+                    seatModified({
+                        'columna': column,
+                        'fila': row,
+                        'estado': state === 1 ? 'blocked' : 'sold',
+                        'curso': course,
+                        'seccion': section
+                    });
                 } else {
                     seat_old.destroy();
-                    Seat.create(
-                        {
-                            row: seat.fila,
-                            column: seat.columna,
-                            section: seat.seccion,
-                            course: seat.curso,
-                            state: 0,
-                            'name': seat.name,
-                            'register_number': seat.register_number,
-                            'university': seat.university,
-                            'no_document': seat.no_document,
-                            'precio' : seat.precio
-                        }).then(seat => {
-                            seatModified({
-                                'columna': seat.column,
-                                'fila': seat.row,
-                                'estado': seat.state === 1 ? 'blocked' : 'sold',
-                                'curso': seat.course,
-                                'seccion': seat.section
-                            });
-                            res.json({
-                                status: true,
-                                message: 'Order salvada',
-                                seat: seat,
-                            })
-                        })
+                    let seatCreated = await Seat.create({
+                        row: seat.fila,
+                        column: seat.columna,
+                        section: seat.seccion,
+                        course: seat.curso,
+                        state: 0,
+                        'name': seat.name,
+                        'register_number': seat.register_number,
+                        'university': seat.university,
+                        'no_document': seat.no_document,
+                        'precio' : seat.precio
+                    });
+                    const {column, row, state, course, section} = seatCreated;   
+                    seatModified({
+                        'columna': column,
+                        'fila': row,
+                        'estado': state === 1 ? 'blocked' : 'sold',
+                        'curso': course,
+                        'seccion': section
+                    });
                 }
-            });
-        }
+            }
+        }    
+        res.json({
+            status: true,
+            message: 'Order salvada',
+            seat: seat,
+        });
+    } catch (error) {
+        res.json({
+            status: false,
+            message: 'Error al guardar asientos',
+            seat: seat,
+        });    
     }
 });
 
