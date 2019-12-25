@@ -125,7 +125,7 @@ app.post('/register', function (req, res) {
 
 app.post('/login', function (req, res) {
     console.log("name: " + req.body.firstname + ", lastname: " + req.body.lastname);
-    var isAdmin =req.body.email == 'erickimpladent@gmail.com';
+    // var isAdmin =req.body.email == 'erickimpladent@gmail.com';
     User.findOne({
         where: {
             email: req.body.email,
