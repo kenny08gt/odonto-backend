@@ -56,7 +56,7 @@ module.exports = {
       {
         uniqueKeys: {
           actions_unique: {
-            fields: ['column', 'row', 'section']
+            fields: ['column', 'row', 'section', 'course']
           }
         }
       },
