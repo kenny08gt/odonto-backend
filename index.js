@@ -58,7 +58,7 @@ let sockets = {};
 
 //const sequelize = require("./connection");
 const app = express();
-const port = process.env.PORT || 4001;
+const port = process.env.PORT || 9000;
 // app.use(index);
 const corsOptions = {
     origin: true,
@@ -311,18 +311,19 @@ if (process.env.NODE_ENV == 'development') {
 
     server.listen(port, () => console.log(`Listening on port ${port}`));
 } else {
-    var https = require('https');
-    var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
-    var certificate = fs.readFileSync('cert.crt', 'utf8').toString();
-    var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
-    var credentials = { key: privateKey, cert: certificate, ca: dad };
+//    var https = require('https');
+//    var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
+//    var certificate = fs.readFileSync('cert.crt', 'utf8').toString();
+//    var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
+//    var credentials = { key: privateKey, cert: certificate, ca: dad };
 
-    var httpsServer = https.createServer(credentials, app);
+    server = http.createServer(app);
 
     //    server = https.createServer(credentials, app);
-    io = socketIo.listen(httpsServer);
+    io = socketIo.listen(server);
+    server.listen(port, () => console.log(`Listening on port ${port}`));
 
-    httpsServer.listen(443, () => console.log(`Listening on port 443`));
+//    httpsServer.listen(443, () => console.log(`Listening on port 443`));
 }
 
 Array.prototype.insert = function (index, item) {
