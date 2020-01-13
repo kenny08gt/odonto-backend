@@ -36,6 +36,7 @@ var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, 
 });
 let Seat = require("./models/Seat")(sequelize, DataTypes);
 let User = require("./models/User")(sequelize, DataTypes);
+let Transaction = require("./models/Transaction")(sequelize, DataTypes);
 
 // Delete asientos bloqueados que se quedaron clonados
 Seat.findAll({
@@ -73,6 +74,38 @@ app.use(cookieParser());
 
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
+app.get('/payment-callback', function(req, res){
+    //ID=xfuD2JtW9kOQzwdYWb5Yqg2&RespCode=3&ReasonCode=11
+    let id = req.query.ID;
+    let resp_code = req.query.RespCode;
+    let reason_code = req.query.ReasonCode;
+    // res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code);
+
+    if(resp_code == 1) {
+        res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code+"<br><br> <strong style='font-size:10rem;'>APPROVED</strong>");
+    }else if(resp_code == 2) {
+            res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code+"<br><br> <strong style='font-size:10rem;'>DECLINED</strong>");
+    }else if(resp_code == 3) {
+        res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code+"<br><br> <strong style='font-size:10rem;'>ERROR</strong>");
+    } else {
+        res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code+"<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
+    }
+
+    console.log('after');
+
+    //save transaction
+    Transaction.create({
+        user_id: user.id,
+        order_id: id,
+        state: resp_code,
+        seats: {}
+    }).then(function () {
+        let socket = users[user.id]['socket'];
+        socket.emit('payment.resut.' + user.id, req.query);
+    });
+
+   
+});
 
 app.get('/*', function (req, res) {
     res.sendFile(path.join(__dirname + '/frontend/', 'build', 'index.html'));
@@ -305,7 +338,7 @@ var fs = require('fs');
 
 if (process.env.NODE_ENV == 'development') {
     console.log('DEVELOPMENT')
-    app.listen(9000);
+    app.listen(9001);
     server = http.createServer(app);
     io = socketIo(server);
 
