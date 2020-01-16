@@ -112,7 +112,7 @@ app.get('/payment-callback', function (req, res) {
             console.log(data)
             console.log('***((()()******');
             // get the custom order id from the response
-            let user = orders[data.HostedPageResultsResponse.AuthResponse.OrderNumber];
+            let user = orders[id];
 
             //save transaction
             // update the table transaction
@@ -120,17 +120,20 @@ app.get('/payment-callback', function (req, res) {
             let seats = timers[user.id]['seats'];
             Transaction.create({
                 user_id: user.id,
-                order_id: data.HostedPageResultsResponse.AuthResponse.OrderNumber,
+                order_id: id,
                 state: resp_code, //1 exitoso 2 denegado 3 error
                 seats: seats,
                 transaction_raw: data
             }).then(function () {
 
-                seats.forEach(function(seat) {
-                    seat.update({
-                        state: 0
-                      })
-                });
+                if(resp_code == 1) {
+                    seats.forEach(function(seat) {
+                        seat.update({
+                            state: 0
+                          })
+                    });
+                }
+               
 
                 let socket = users[user.id]['socket'];
                 socket.emit('payment.result.' + user.id, {
@@ -295,12 +298,7 @@ app.post('/get-payment-form', (req, res) => {
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
 
-    users[user.id]['order_id'] = order_id;
-    orders[order_id] = user;
-    let seats = timers[user.id]['seats'];
-    seats = seats.map(function (seat) {
-        return seat.order_id = order_id;
-    });
+   
 
     timers[user.id]['seats'] = seats;
 
@@ -308,6 +306,14 @@ app.post('/get-payment-form', (req, res) => {
     .then(response => {
         let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
         console.log(data);
+
+        users[user.id]['order_id'] = order_id;
+        orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
+        let seats = timers[user.id]['seats'];
+        seats = seats.map(function (seat) {
+            return seat.order_id = order_id;
+        });
+        
         res.send({
             securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
             order_id: order_id
