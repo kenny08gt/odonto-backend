@@ -86,21 +86,24 @@ app.get('/payment-callback', function (req, res) {
     let reason_code = req.query.ReasonCode;
     // res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code);
 
-    if (resp_code == 1) {
-        res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>APPROVED</strong>");
-    } else if (resp_code == 2) {
-        res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>DECLINED</strong>");
-    } else if (resp_code == 3) {
-        res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>ERROR</strong>");
-    } else {
-        res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
-    }
+ 
 
     console.log('after');
 
     let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
     axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults', params)
         .then(response => {
+            if (resp_code == 1) {
+                res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>APPROVED</strong>");
+            } else if (resp_code == 2) {
+                res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>DECLINED</strong>");
+            } else if (resp_code == 3) {
+                res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>ERROR</strong>");
+            } else {
+                res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
+            }
+
+
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             console.log(data.HostedPageResultsResponse.AuthResponse.OrderNumber);
             // get the custom order id from the response
