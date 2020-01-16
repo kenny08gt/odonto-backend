@@ -91,7 +91,13 @@ app.get('/payment-callback', function (req, res) {
     console.log('after');
 
     let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
-    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults', params)
+    // axios.post('', params)
+    axios({
+        method: 'post',
+        url: 'https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
+        headers: {}, 
+        data: params
+      })
         .then(response => {
             if (resp_code == 1) {
                 res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>APPROVED</strong>");
