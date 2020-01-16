@@ -263,6 +263,7 @@ app.post('/report', (req, res) => {
 });
 
 app.post('/get-payment-form', (req, res) => {
+    console.log(req);
     let user = req.query.user;
     var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo,{ compact: true, spaces: 4 }));
     var AmountRef =  xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount;
