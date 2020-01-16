@@ -623,6 +623,8 @@ io.on("connection", socket => {
     socket.on('sendOrderNumber', function (data, callback) {
         let user = data.user;
         let order_id = data.order;
+
+        console.log('sendOrderNumber socket -- ' + order_id);
         users[user.id]['order_id'] = order_id;
         orders[order_id] = user;
         let seats = timers[user.id]['seats'];
