@@ -11,6 +11,7 @@ var cookieParser = require('cookie-parser');
 var morgan = require('morgan');
 var bcrypt = require('bcrypt');
 const cors = require('cors');
+var convert = require('xml-js');
 
 const saltRounds = 12;
 var session = require("express-session")({
@@ -47,13 +48,14 @@ Seat.findAll({
     console.log('delete seats bloqueados');
     if (seats !== null) {
         seats.forEach(seat => {
-            console.log('borrar asiento ',seat);
-           seat.destroy();
-       });
-    } 
+            console.log('borrar asiento ', seat);
+            seat.destroy();
+        });
+    }
 });
 
 let users = {};
+let orders = {};
 let timers = {};
 let sockets = {};
 
@@ -68,43 +70,74 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", ""); // update to match the domain you will make the request from
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(cookieParser());
 
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
-app.get('/payment-callback', function(req, res){
+app.get('/payment-callback', function (req, res) {
     //ID=xfuD2JtW9kOQzwdYWb5Yqg2&RespCode=3&ReasonCode=11
     let id = req.query.ID;
     let resp_code = req.query.RespCode;
     let reason_code = req.query.ReasonCode;
     // res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code);
 
-    if(resp_code == 1) {
-        res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code+"<br><br> <strong style='font-size:10rem;'>APPROVED</strong>");
-    }else if(resp_code == 2) {
-            res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code+"<br><br> <strong style='font-size:10rem;'>DECLINED</strong>");
-    }else if(resp_code == 3) {
-        res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code+"<br><br> <strong style='font-size:10rem;'>ERROR</strong>");
+    if (resp_code == 1) {
+        res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>APPROVED</strong>");
+    } else if (resp_code == 2) {
+        res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>DECLINED</strong>");
+    } else if (resp_code == 3) {
+        res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>ERROR</strong>");
     } else {
-        res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code+"<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
+        res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
     }
 
     console.log('after');
 
-    //save transaction
-    Transaction.create({
-        user_id: user.id,
-        order_id: id,
-        state: resp_code,
-        seats: {}
-    }).then(function () {
-        let socket = users[user.id]['socket'];
-        socket.emit('payment.resut.' + user.id, req.query);
-    });
+    let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
+    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults')
+        .then(response => {
+            let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+            console.log(data.HostedPageResultsResponse.AuthResponse.OrderNumber);
+            // get the custom order id from the response
+            let user = orders[data.HostedPageResultsResponse.AuthResponse.OrderNumber];
 
-   
+            //save transaction
+            // update the table transaction
+            // update seats states.
+            let seats = timers[user.id]['seats'];
+            Transaction.create({
+                user_id: user.id,
+                order_id: data.HostedPageResultsResponse.AuthResponse.OrderNumber,
+                state: resp_code, //1 exitoso 2 denegado 3 error
+                seats: seats,
+                transaction_raw: data
+            }).then(function () {
+
+                seats.forEach(function(seat) {
+                    seat.update({
+                        state: 0
+                      })
+                });
+
+                let socket = users[user.id]['socket'];
+                socket.emit('payment.result.' + user.id, {
+                    reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription,
+                    status: resp_code //1 exitoso 2 denegado 3 error
+                });
+            });
+
+        })
+        .catch(error => {
+            console.log(error);
+        });
 });
 
 app.get('/*', function (req, res) {
@@ -176,7 +209,7 @@ app.post('/login', function (req, res) {
             users[user.id] = {};
             users[user.id]['socket'] = null;
             // TODO: Remove this
-//            user.admin = isAdmin;
+                    //    user.admin = true;
             console.log(user);
             res.json({
                 state: true,
@@ -189,8 +222,8 @@ app.post('/login', function (req, res) {
 
 // route for user logout
 app.get('/logout', (req, res) => {
-   
-        res.redirect('/');
+
+    res.redirect('/');
 });
 
 app.post('/report', (req, res) => {
@@ -233,12 +266,12 @@ app.post('/report', (req, res) => {
 });
 
 //TODO implement save the order from the frontend
-app.post('/save_order',  async (req, res) => {
+app.post('/save_order', async (req, res) => {
     let seats = req.body.seats;
-    console.log('save order ',seats);
+    console.log('save order ', seats);
     try {
         for (var key in seats) {
-            console.log('key '+ key);
+            console.log('key ' + key);
             if (seats.hasOwnProperty(key)) {
                 seat = seats[key];
                 console.log(seat);
@@ -251,7 +284,7 @@ app.post('/save_order',  async (req, res) => {
                     }
                 });
                 if (seat_old === null) {
-                   let seatCreated = await  Seat.create({
+                    let seatCreated = await Seat.create({
                         row: seat.fila,
                         column: seat.columna,
                         section: seat.seccion,
@@ -261,9 +294,9 @@ app.post('/save_order',  async (req, res) => {
                         'register_number': seat.register_number,
                         'university': seat.university,
                         'no_document': seat.no_document,
-                        'precio' : seat.precio
+                        'precio': seat.precio
                     });
-                    const {column, row, state, course, section} = seatCreated;
+                    const { column, row, state, course, section } = seatCreated;
                     seatModified({
                         'columna': column,
                         'fila': row,
@@ -283,9 +316,9 @@ app.post('/save_order',  async (req, res) => {
                         'register_number': seat.register_number,
                         'university': seat.university,
                         'no_document': seat.no_document,
-                        'precio' : seat.precio
+                        'precio': seat.precio
                     });
-                    const {column, row, state, course, section} = seatCreated;   
+                    const { column, row, state, course, section } = seatCreated;
                     seatModified({
                         'columna': column,
                         'fila': row,
@@ -295,7 +328,7 @@ app.post('/save_order',  async (req, res) => {
                     });
                 }
             }
-        }    
+        }
         res.json({
             status: true,
             message: 'Order salvada',
@@ -306,31 +339,31 @@ app.post('/save_order',  async (req, res) => {
             status: false,
             message: 'Error al guardar asientos',
             seat: null,
-        });    
+        });
     }
 });
 
 app.post('/sendEmail', function (req, res) {
     const { mailOptions } = req.body;
     console.log(mailOptions);
-    if(mailOptions){
-      var transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'rluis4490@gmail.com',
-          pass: 'lamaravilla.net123'
-        }
-      });
-      transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-          console.log(error);
-          res.json(error);
-        } else {
-          res.json({message: 'Email sent: ' + info.response});
-        }
-      });
+    if (mailOptions) {
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'rluis4490@gmail.com',
+                pass: 'lamaravilla.net123'
+            }
+        });
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+                res.json(error);
+            } else {
+                res.json({ message: 'Email sent: ' + info.response });
+            }
+        });
     }
-  });
+});
 
 let io = null;
 let server = null;
@@ -344,11 +377,11 @@ if (process.env.NODE_ENV == 'development') {
 
     server.listen(port, () => console.log(`Listening on port ${port}`));
 } else {
-//    var https = require('https');
-//    var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
-//    var certificate = fs.readFileSync('cert.crt', 'utf8').toString();
-//    var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
-//    var credentials = { key: privateKey, cert: certificate, ca: dad };
+    //    var https = require('https');
+    //    var privateKey = fs.readFileSync('odontologiaindependiente.key', 'utf8').toString();
+    //    var certificate = fs.readFileSync('cert.crt', 'utf8').toString();
+    //    var dad = fs.readFileSync('bundle.crt', 'utf8').toString();
+    //    var credentials = { key: privateKey, cert: certificate, ca: dad };
 
     server = http.createServer(app);
 
@@ -356,7 +389,7 @@ if (process.env.NODE_ENV == 'development') {
     io = socketIo.listen(server);
     server.listen(port, () => console.log(`Listening on port ${port}`));
 
-//    httpsServer.listen(443, () => console.log(`Listening on port 443`));
+    //    httpsServer.listen(443, () => console.log(`Listening on port 443`));
 }
 
 Array.prototype.insert = function (index, item) {
@@ -403,7 +436,7 @@ io.on("connection", socket => {
     socket.on('connected', function (data, callback) {
         let user = data.user;
         console.log(data);
-        if(user != null) {
+        if (user != null) {
             users[user.id] = {}
             users[user.id]['socket'] = socket;
             timers[user.id] = {};
@@ -425,13 +458,13 @@ io.on("connection", socket => {
             callback({});
         });;
     });
-    
+
     noticeUserConnected(socket);
 
     socket.on("disconnect", (data) => {
         let user = data.user;
 
-        if(user == null) {
+        if (user == null) {
             console.log('Event disconnect, user undefined');
             return false;
         }
@@ -450,7 +483,7 @@ io.on("connection", socket => {
         let user = data.user;
         console.log('close-timer');
         console.log(data);
-        if(user == null) {
+        if (user == null) {
             console.log('Event close-time, user undefined');
             return false;
         }
@@ -472,7 +505,7 @@ io.on("connection", socket => {
         console.log(data);
         let user = data.user;
 
-        if(user == null) {
+        if (user == null) {
             console.log('Event seatModified, user undefined');
             return false;
         }
@@ -572,9 +605,9 @@ io.on("connection", socket => {
 
     socket.on('countdownStart', function (data, callback) {
         let user = data.user;
-console.log('countdownStart')
-console.log(data);
-        if(user == null) {
+        console.log('countdownStart')
+        console.log(data);
+        if (user == null) {
             console.log('Event countdownStart, user undefined');
             return false;
         }
@@ -582,9 +615,23 @@ console.log(data);
         console.log('countdownStart for socket ' + user.id)
         var timeleft = 10 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
-        if(timers[user.id] !== undefined) {
+        if (timers[user.id] !== undefined) {
             timers[user.id]['timer'] = downloadTimer;
         }
+    })
+
+    socket.on('setOrderNumber', function (data, callback) {
+        let user = data.user;
+        let order_id = data.order;
+        users[user.id]['order_id'] = order_id;
+        orders[order_id] = user;
+        let seats = timers[user.id]['seats'];
+        seats = seats.map(function (seat) {
+            return seat.order_id = order_id;
+        });
+
+        timers[user.id]['seats'] = seats;
+        callback('');
     })
 });
 
@@ -618,7 +665,7 @@ let handleTimer = function (socket, timeleft, callback) {
         // console.log('time left ' + timeleft);
         timeleft -= 1;
         if (timeleft <= 0) {
-//            delete timers[socket.handshake.session.user.id]['timer'];
+            //            delete timers[socket.handshake.session.user.id]['timer'];
 
             clearInterval(downloadTimer);
             callback('countdown finished');

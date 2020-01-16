@@ -10,6 +10,7 @@ module.exports = {
           primaryKey: true,
           autoIncrement: true
         },
+        uuid: Sequelize.STRING,
         user_id: {
           type: Sequelize.INTEGER,
           references: {

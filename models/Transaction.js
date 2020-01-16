@@ -1,20 +1,30 @@
-const Sequelize = require('sequelize');
+"use strict";
 
-module.exports = () => {
-    return {
+module.exports = function (sequelize, DataTypes) {
+    var Transaction = sequelize.define("transaction", {
         id: {
-            type: Sequelize.INTEGER,
+            type: DataTypes.INTEGER,
             primaryKey: true,
         },
-        user_id: Sequelize.INTEGER,
-        transaction: Sequelize.STRING,
-        state: Sequelize.INTEGER,
+        user_id: DataTypes.INTEGER,
+        order_id: DataTypes.STRING,
+        state: DataTypes.INTEGER,
         seats: {
-            type: Sequelize.STRING,
+            type: DataTypes.STRING,
             get: function () {
                 var seats = this.getDataValue('seats');
                 return JSON.parse(seats);
             },
+        },
+        transaction: DataTypes.STRING,
+        transaction_raw: {
+            type: DataTypes.STRING,
+            get: function () {
+                var seats = this.getDataValue('transaction_raw');
+                return JSON.parse(seats);
+            },
         }
-    }
+    });
+
+    return Transaction;
 };

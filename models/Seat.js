@@ -17,6 +17,7 @@ module.exports = function (sequelize, DataTypes) {
         register_number: DataTypes.STRING,
         university: DataTypes.STRING,
         no_document: DataTypes.STRING,
+        order_id: DataTypes.STRING
     });
 
     return Seat;
