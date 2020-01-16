@@ -620,7 +620,7 @@ io.on("connection", socket => {
         }
     })
 
-    socket.on('setOrderNumber', function (data, callback) {
+    socket.on('sendOrderNumber', function (data, callback) {
         let user = data.user;
         let order_id = data.order;
         users[user.id]['order_id'] = order_id;
