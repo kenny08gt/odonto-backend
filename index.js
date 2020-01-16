@@ -103,9 +103,10 @@ app.get('/payment-callback', function (req, res) {
                 res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
             }
 
-
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
-            console.log(data.HostedPageResultsResponse.AuthResponse.OrderNumber);
+            console.log('***((()()******');
+            console.log(data)
+            console.log('***((()()******');
             // get the custom order id from the response
             let user = orders[data.HostedPageResultsResponse.AuthResponse.OrderNumber];
 
