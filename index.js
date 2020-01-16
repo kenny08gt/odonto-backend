@@ -12,6 +12,9 @@ var morgan = require('morgan');
 var bcrypt = require('bcrypt');
 const cors = require('cors');
 var convert = require('xml-js');
+var sha1 = require('sha1');
+
+var PreXmlInfo = require('./preprocessingtoken');
 
 const saltRounds = 12;
 var session = require("express-session")({
@@ -70,12 +73,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// app.use(function (req, res, next) {
-//     res.header("Access-Control-Allow-Origin", ""); // update to match the domain you will make the request from
-//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-//     next();
-// });
-
 app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(cookieParser());
@@ -102,7 +99,7 @@ app.get('/payment-callback', function (req, res) {
     console.log('after');
 
     let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
-    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults')
+    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults', params)
         .then(response => {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             console.log(data.HostedPageResultsResponse.AuthResponse.OrderNumber);
@@ -265,6 +262,53 @@ app.post('/report', (req, res) => {
     // }
 });
 
+app.post('/get-payment-form', (req, res) => {
+    let user = req.query.user;
+    var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo,{ compact: true, spaces: 4 }));
+    var AmountRef =  xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount;
+    var cartTotalString = `${req.query.cartTotal.toString()}00`;
+    var arrayStr = cartTotalString.split('');
+    var amountStr = Array.from({length:12-arrayStr.length}).map(x=>'0').join(''); 
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount = amountStr+cartTotalString;
+
+    // var OrderNumberRef=xmlDoc.getElementsByTagName("OrderNumber")[0].childNodes[0];
+    // OrderNumberRef.nodeValue = this.generateOrderNumber();
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber = generateOrderNumber();
+    let order_id = xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber;
+    // //generating signature
+    var ProcessingPass = 'KI73nt6s';
+    var MerchantId = '88801272';
+    var AcquirerId = '464748';
+    var Currency   = '320'; 
+    var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64')); 
+    
+    // var SignatureRef=xmlDoc.getElementsByTagName("Signature")[0].childNodes[0];
+    // SignatureRef.nodeValue = Signature;
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
+
+    users[user.id]['order_id'] = order_id;
+    orders[order_id] = user;
+    let seats = timers[user.id]['seats'];
+    seats = seats.map(function (seat) {
+        return seat.order_id = order_id;
+    });
+
+    timers[user.id]['seats'] = seats;
+
+    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, {compact: true, ignoreComment: true, spaces: 4}))
+    .then(response => {
+        let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+        console.log(data);
+        res.send({
+            securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
+            order_id: order_id
+        });
+    })
+    .catch(err => {
+        console.log(error)
+    })
+})
+
 //TODO implement save the order from the frontend
 app.post('/save_order', async (req, res) => {
     let seats = req.body.seats;
@@ -411,6 +455,16 @@ const noticeUserConnected = async socket => {
         console.log(error);
         console.error(`Error: ${error.code}`);
     }
+};
+
+const StringToXML = (oString) => {
+    return (new DomParser()).parseFromString(oString);
+};
+
+const generateOrderNumber = () =>{
+    var numberRandom = Math.floor(Math.random()*(999-100+1)+100);
+    var orderNumberGenerated= `UNB${(+ new Date())}${numberRandom}`;
+    return  orderNumberGenerated;
 };
 
 const seatModified = async data => {
