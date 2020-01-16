@@ -264,10 +264,10 @@ app.post('/report', (req, res) => {
 
 app.post('/get-payment-form', (req, res) => {
     console.log(req);
-    let user = req.query.user;
+    let user = req.body.user;
     var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo,{ compact: true, spaces: 4 }));
     var AmountRef =  xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount;
-    var cartTotalString = `${req.query.cartTotal.toString()}00`;
+    var cartTotalString = `${req.body.cartTotal.toString()}00`;
     var arrayStr = cartTotalString.split('');
     var amountStr = Array.from({length:12-arrayStr.length}).map(x=>'0').join(''); 
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount = amountStr+cartTotalString;
