@@ -300,7 +300,7 @@ app.post('/get-payment-form', (req, res) => {
 
    
 
-    timers[user.id]['seats'] = seats;
+    
 
     axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, {compact: true, ignoreComment: true, spaces: 4}))
     .then(response => {
@@ -309,11 +309,13 @@ app.post('/get-payment-form', (req, res) => {
 
         users[user.id]['order_id'] = order_id;
         orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
+        orders[order_id] = user;
         let seats = timers[user.id]['seats'];
         seats = seats.map(function (seat) {
             return seat.order_id = order_id;
         });
-        
+        timers[user.id]['seats'] = seats;
+
         res.send({
             securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
             order_id: order_id
