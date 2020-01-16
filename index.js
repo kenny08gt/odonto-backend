@@ -85,10 +85,7 @@ app.get('/payment-callback', function (req, res) {
     let resp_code = req.query.RespCode;
     let reason_code = req.query.ReasonCode;
     // res.send('loading...<br>ID: '+id+"<br>RESPCODE: "+resp_code+"<br>REASONCODE: "+reason_code);
-
- 
-
-    console.log('after');
+    console.log(id);
 
     let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
     // axios.post('', params)
@@ -109,6 +106,7 @@ app.get('/payment-callback', function (req, res) {
                 res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
             }
 
+            console.log(response);
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             console.log('***((()()******');
             console.log(data)
