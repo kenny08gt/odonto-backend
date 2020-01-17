@@ -120,7 +120,7 @@ app.get('/payment-callback', function (req, res) {
                 user_id: user.id,
                 order_id: id,
                 state: resp_code, //1 exitoso 2 denegado 3 error
-                seats: JSON.stringify(seats),
+                seats: '',
                 transaction_raw: ''
             }).then(function () {
 
@@ -303,20 +303,13 @@ app.post('/get-payment-form', (req, res) => {
         orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
         orders[order_id] = user;
         let seats = timers[user.id]['seats'];
-        
-        console.log('seats11');
-        console.log(seats);
 
         seats = seats.map(function (seat) {
             seat.order_id = order_id;
-            console.log(seat)
             return seat;
         });
 
         timers[user.id]['seats'] = seats;
-
-        console.log('seats1');
-        console.log(seats);
 
         res.send({
             securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
