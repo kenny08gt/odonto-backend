@@ -166,13 +166,36 @@ app.get('/payment-callback', function (req, res) {
                     })
                 });
 
-                console.log('emitir success socket');
                 let socket = users[user.id]['socket'];
-                console.log(data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text);
                 socket.emit('payment.result.' + user.id, {
                     reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text,
                     status: resp_code //1 exitoso 2 denegado 3 error
                 });
+
+                if(resp_code == 1) {
+                    var message = {
+                        from: "no-reply@server.com",
+                        to: "receiver@sender.com",
+                        subject: "Compra exitosa",
+                        text: "Su compra a sido exito. Su numero de orden es " + id + response.data,
+                        html: "Su compra a sido exito. Su numero de orden es " + id + response.data
+                      };
+
+                    var transporter = nodemailer.createTransport({
+                        service: 'gmail',
+                        auth: {
+                            user: process.env.EMAIL,
+                            pass: process.env.EMAIL_PASSWORD
+                        }
+                    });
+                    transporter.sendMail(message, function (error, info) {
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log('email sent',info.response )
+                        }
+                    });
+                }
             });
 
         })
@@ -441,8 +464,8 @@ app.post('/sendEmail', function (req, res) {
         var transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: 'rluis4490@gmail.com',
-                pass: 'lamaravilla.net123'
+                user: process.env.EMAIL,
+                pass: process.env.EMAIL_PASSWORD
             }
         });
         transporter.sendMail(mailOptions, function (error, info) {
