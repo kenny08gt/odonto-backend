@@ -141,6 +141,13 @@ app.get('/payment-callback', function (req, res) {
                                 })
                                 .then(function (seat__) {
                                     console.log('seat updated');
+                                    seatModified({
+                                        'columna': seat__.column,
+                                        'fila': seat__.row,
+                                        'estado': 'sold',
+                                        'curso': seat__.course,
+                                        'seccion': seat__.section
+                                    });
                                 })
                             }
                         }).catch(error => {
