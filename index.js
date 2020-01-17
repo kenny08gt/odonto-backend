@@ -115,7 +115,7 @@ app.get('/payment-callback', function (req, res) {
             // update seats states.
             let seats = timers[user.id]['seats'];
             console.log('seats');
-        console.log(seats);
+            console.log(seats);
             Transaction.create({
                 user_id: user.id,
                 order_id: id,
@@ -299,8 +299,6 @@ app.post('/get-payment-form', (req, res) => {
     axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, {compact: true, ignoreComment: true, spaces: 4}))
     .then(response => {
         let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
-        console.log(data);
-
         users[user.id]['order_id'] = order_id;
         orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
         orders[order_id] = user;
@@ -310,6 +308,9 @@ app.post('/get-payment-form', (req, res) => {
             return seat.order_id = order_id;
         });
         timers[user.id]['seats'] = seats;
+
+        console.log('seats1');
+        console.log(seats);
 
         res.send({
             securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
