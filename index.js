@@ -92,16 +92,16 @@ app.get('/payment-callback', function (req, res) {
     axios({
         method: 'post',
         url: 'https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
-        headers: {}, 
+        headers: {},
         data: params
-      })
+    })
         .then(response => {
             if (resp_code == 1) {
-                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code );
+                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else if (resp_code == 2) {
-                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code );
+                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else if (resp_code == 3) {
-                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code );
+                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             }
@@ -124,18 +124,18 @@ app.get('/payment-callback', function (req, res) {
                 transaction_raw: ''
             }).then(function () {
 
-                if(resp_code == 1) {
-                    seats.forEach(function(seat) {
-                        Seat.findOne({
-                            where: {
-                                row: seat.fila,
-                                column: seat.columna,
-                                section: seat.seccion,
-                                course: seat.curso,
-                            }
-                        }).then(function (seat_) {
-                            // Check if record exists in db
-                            if (seat_) {
+                seats.forEach(function (seat) {
+                    Seat.findOne({
+                        where: {
+                            row: seat.fila,
+                            column: seat.columna,
+                            section: seat.seccion,
+                            course: seat.curso,
+                        }
+                    }).then(function (seat_) {
+                        // Check if record exists in db
+                        if (seat_) {
+                            if (resp_code == 1) {
                                 seat_.update({
                                     state: 0 // actualizar a vendido
                                 })
@@ -148,16 +148,18 @@ app.get('/payment-callback', function (req, res) {
                                         'curso': seat__.course,
                                         'seccion': seat__.section
                                     });
-                                })
+                                });
+                            } else {
+                                seat.destroy();
                             }
-                        }).catch(error => {
-                            console.log('trono el findone');
-                            console.log(error);
-                        })
-                    });
-                }
-               
-console.log('emitir success socket');
+                        }
+                    }).catch(error => {
+                        console.log('trono el findone');
+                        console.log(error);
+                    })
+                });
+
+                console.log('emitir success socket');
                 let socket = users[user.id]['socket'];
                 console.log(data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text);
                 socket.emit('payment.result.' + user.id, {
@@ -241,7 +243,7 @@ app.post('/login', function (req, res) {
             users[user.id] = {};
             users[user.id]['socket'] = null;
             // TODO: Remove this
-                    //    user.admin = true;
+            //    user.admin = true;
             console.log(user);
             res.json({
                 state: true,
@@ -300,12 +302,12 @@ app.post('/report', (req, res) => {
 app.post('/get-payment-form', (req, res) => {
     console.log(req.body);
     let user = req.body.user;
-    var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo,{ compact: true, spaces: 4 }));
-    var AmountRef =  xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount;
+    var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo, { compact: true, spaces: 4 }));
+    var AmountRef = xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount;
     var cartTotalString = `${req.body.cartTotal.toString()}00`;
     var arrayStr = cartTotalString.split('');
-    var amountStr = Array.from({length:12-arrayStr.length}).map(x=>'0').join(''); 
-    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount = amountStr+cartTotalString;
+    var amountStr = Array.from({ length: 12 - arrayStr.length }).map(x => '0').join('');
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount = amountStr + cartTotalString;
 
     // var OrderNumberRef=xmlDoc.getElementsByTagName("OrderNumber")[0].childNodes[0];
     // OrderNumberRef.nodeValue = this.generateOrderNumber();
@@ -315,36 +317,36 @@ app.post('/get-payment-form', (req, res) => {
     var ProcessingPass = process.env.PROCESSING_PASSWORD;
     var MerchantId = process.env.MERCHANT_ID;
     var AcquirerId = process.env.ACQUIRER_ID;
-    var Currency   = process.env.CURRENCY; 
-    var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64')); 
-    
+    var Currency = process.env.CURRENCY;
+    var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64'));
+
     // var SignatureRef=xmlDoc.getElementsByTagName("Signature")[0].childNodes[0];
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
 
-    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, {compact: true, ignoreComment: true, spaces: 4}))
-    .then(response => {
-        let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
-        users[user.id]['order_id'] = order_id;
-        orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
-        orders[order_id] = user;
-        let seats = timers[user.id]['seats'];
+    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
+        .then(response => {
+            let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+            users[user.id]['order_id'] = order_id;
+            orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
+            orders[order_id] = user;
+            let seats = timers[user.id]['seats'];
 
-        seats = seats.map(function (seat) {
-            seat.order_id = order_id;
-            return seat;
-        });
+            seats = seats.map(function (seat) {
+                seat.order_id = order_id;
+                return seat;
+            });
 
-        timers[user.id]['seats'] = seats;
+            timers[user.id]['seats'] = seats;
 
-        res.send({
-            securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
-            order_id: order_id
-        });
-    })
-    .catch(err => {
-        console.log(error)
-    })
+            res.send({
+                securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
+                order_id: order_id
+            });
+        })
+        .catch(err => {
+            console.log(error)
+        })
 })
 
 //TODO implement save the order from the frontend
@@ -499,10 +501,10 @@ const StringToXML = (oString) => {
     return (new DomParser()).parseFromString(oString);
 };
 
-const generateOrderNumber = () =>{
-    var numberRandom = Math.floor(Math.random()*(999-100+1)+100);
-    var orderNumberGenerated= `UNB${(+ new Date())}${numberRandom}`;
-    return  orderNumberGenerated;
+const generateOrderNumber = () => {
+    var numberRandom = Math.floor(Math.random() * (999 - 100 + 1) + 100);
+    var orderNumberGenerated = `UNB${(+ new Date())}${numberRandom}`;
+    return orderNumberGenerated;
 };
 
 const seatModified = async data => {
@@ -574,7 +576,7 @@ io.on("connection", socket => {
     socket.on('close-timer', function (data) {
         let user = data.user;
         console.log('close-timer');
-//        console.log(data);
+        //        console.log(data);
         if (user == null) {
             console.log('Event close-time, user undefined');
             return false;
@@ -582,7 +584,7 @@ io.on("connection", socket => {
 
         try {
             var fn = timers[user.id]['timer'];
-            if(fn !== undefined)
+            if (fn !== undefined)
                 fn._destroyed = true;
             clearInterval(timers[user.id]['timer']);
             timers[user.id]['timer'] = null;
