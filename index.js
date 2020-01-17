@@ -106,11 +106,7 @@ app.get('/payment-callback', function (req, res) {
                 res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
             }
 
-            console.log(response);
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
-            console.log('***((()()******');
-            console.log(data)
-            console.log('***((()()******');
             // get the custom order id from the response
             let user = orders[id];
 
@@ -288,19 +284,15 @@ app.post('/get-payment-form', (req, res) => {
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber = generateOrderNumber();
     let order_id = xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber;
     // //generating signature
-    var ProcessingPass = 'KI73nt6s';
-    var MerchantId = '88801272';
-    var AcquirerId = '464748';
-    var Currency   = '320'; 
+    var ProcessingPass = process.env.PROCESSING_PASSWORD;
+    var MerchantId = process.env.MERCHANT_ID;
+    var AcquirerId = process.env.ACQUIRER_ID;
+    var Currency   = process.env.CURRENCY; 
     var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64')); 
     
     // var SignatureRef=xmlDoc.getElementsByTagName("Signature")[0].childNodes[0];
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
-
-   
-
-    
 
     axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, {compact: true, ignoreComment: true, spaces: 4}))
     .then(response => {
