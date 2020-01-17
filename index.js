@@ -173,13 +173,20 @@ app.get('/payment-callback', function (req, res) {
                 });
 
                 if(resp_code == 1) {
+                    let body = "<table>";
+                    seats.forEach(function (seat) {
+                        body += '<tr><td>fila: ' + seat.row + '</td><td>columna: ' + seat.column + '</td><td>sección: ' + seat.section + '</td><td>curso: ' + seat.course + '</td></tr>'
+                    })
+
+                    body += '</table>';
+                    
                     var message = {
                         from: "no-reply@server.com",
                         to: user.email,
                         cc: "alan.hurtarte@gmail.com",
                         subject: "Compra exitosa",
-                        text: "Su compra a sido exito. Su numero de orden es " + id + response.data,
-                        html: "Su compra a sido exito. Su numero de orden es " + id + response.data
+                        text: "Su compra a sido exito. " + body,
+                        html: "Su compra a sido exito. <br>" + body 
                       };
 
                     var transporter = nodemailer.createTransport({
