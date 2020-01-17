@@ -159,9 +159,9 @@ app.get('/payment-callback', function (req, res) {
                
 console.log('emitir success socket');
                 let socket = users[user.id]['socket'];
-                console.log(data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription);
+                console.log(data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text);
                 socket.emit('payment.result.' + user.id, {
-                    reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription,
+                    reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text,
                     status: resp_code //1 exitoso 2 denegado 3 error
                 });
             });
