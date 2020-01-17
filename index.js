@@ -72,7 +72,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
+app.use(express.static('public'))
 app.use(express.static(path.join(__dirname + '/frontend/', 'build')));
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(cookieParser());
@@ -114,6 +114,8 @@ app.get('/payment-callback', function (req, res) {
             // update the table transaction
             // update seats states.
             let seats = timers[user.id]['seats'];
+            console.log('seats');
+        console.log(seats);
             Transaction.create({
                 user_id: user.id,
                 order_id: id,
@@ -303,6 +305,7 @@ app.post('/get-payment-form', (req, res) => {
         orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
         orders[order_id] = user;
         let seats = timers[user.id]['seats'];
+        
         seats = seats.map(function (seat) {
             return seat.order_id = order_id;
         });
