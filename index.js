@@ -139,8 +139,12 @@ app.get('/payment-callback', function (req, res) {
                                 seat_.update({
                                     state: 0 // actualizar a vendido
                                 })
-                                .success(function () {})
+                                .success(function () {
+                                    console.log('seat updated',seat_);
+                                })
                             }
+                        }).catch(error => {
+                            console.log('trono el findone');
                         })
                     });
                 }
