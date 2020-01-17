@@ -97,13 +97,13 @@ app.get('/payment-callback', function (req, res) {
       })
         .then(response => {
             if (resp_code == 1) {
-                res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>APPROVED</strong>");
+                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code );
             } else if (resp_code == 2) {
-                res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>DECLINED</strong>");
+                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code );
             } else if (resp_code == 3) {
-                res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>ERROR</strong>");
+                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code );
             } else {
-                res.send('<img src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code + "<br>REASONCODE: " + reason_code + "<br><br> <strong style='font-size:10rem;'>Nunca debería entrar aqui</strong>");
+                res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             }
 
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
