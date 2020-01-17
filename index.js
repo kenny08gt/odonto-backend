@@ -145,6 +145,7 @@ app.get('/payment-callback', function (req, res) {
                             }
                         }).catch(error => {
                             console.log('trono el findone');
+                            console.log(error);
                         })
                     });
                 }
