@@ -139,8 +139,8 @@ app.get('/payment-callback', function (req, res) {
                                 seat_.update({
                                     state: 0 // actualizar a vendido
                                 })
-                                .success(function () {
-                                    console.log('seat updated',seat_);
+                                .then(function (seat__) {
+                                    console.log('seat updated',seat__);
                                 })
                             }
                         }).catch(error => {
