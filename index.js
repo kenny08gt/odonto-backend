@@ -573,7 +573,8 @@ io.on("connection", socket => {
 
         try {
             var fn = timers[user.id]['timer'];
-            fn._destroyed = true;
+            if(fn !== undefined)
+                fn._destroyed = true;
             clearInterval(timers[user.id]['timer']);
             timers[user.id]['timer'] = null;
             delete timers[user.id]['timer'];
