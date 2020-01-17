@@ -140,7 +140,7 @@ app.get('/payment-callback', function (req, res) {
                                     state: 0 // actualizar a vendido
                                 })
                                 .then(function (seat__) {
-                                    console.log('seat updated',seat__);
+                                    console.log('seat updated');
                                 })
                             }
                         }).catch(error => {
