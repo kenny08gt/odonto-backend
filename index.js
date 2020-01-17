@@ -150,7 +150,14 @@ app.get('/payment-callback', function (req, res) {
                                     });
                                 });
                             } else {
-                                seat.destroy();
+                                seat_.destroy();
+                                seatModified({
+                                    'columna': seat__.column,
+                                    'fila': seat__.row,
+                                    'estado': 'free',
+                                    'curso': seat__.course,
+                                    'seccion': seat__.section
+                                });
                             }
                         }
                     }).catch(error => {
