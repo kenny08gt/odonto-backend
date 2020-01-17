@@ -308,6 +308,7 @@ app.post('/get-payment-form', (req, res) => {
         console.log(seats);
 
         seats = seats.map(function (seat) {
+            console.log(seat)
             return seat.order_id = order_id;
         });
         timers[user.id]['seats'] = seats;
