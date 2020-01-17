@@ -133,8 +133,7 @@ app.get('/payment-callback', function (req, res) {
                                 section: seat.seccion,
                                 course: seat.curso,
                             }
-                        })
-                        .on('success', function (seat_) {
+                        }).then(function (seat_) {
                             // Check if record exists in db
                             if (seat_) {
                                 seat_.update({
