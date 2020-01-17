@@ -149,7 +149,7 @@ app.get('/payment-callback', function (req, res) {
                     });
                 }
                
-
+console.log('emitir success socket');
                 let socket = users[user.id]['socket'];
                 socket.emit('payment.result.' + user.id, {
                     reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription,
@@ -565,7 +565,7 @@ io.on("connection", socket => {
     socket.on('close-timer', function (data) {
         let user = data.user;
         console.log('close-timer');
-        console.log(data);
+//        console.log(data);
         if (user == null) {
             console.log('Event close-time, user undefined');
             return false;
