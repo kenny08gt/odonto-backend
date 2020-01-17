@@ -126,9 +126,23 @@ app.get('/payment-callback', function (req, res) {
 
                 if(resp_code == 1) {
                     seats.forEach(function(seat) {
-                        seat.update({
-                            state: 0
-                          })
+                        Seat.findOne({
+                            where: {
+                                row: seat.fila,
+                                column: seat.columna,
+                                section: seat.seccion,
+                                course: seat.curso,
+                            }
+                        })
+                        .on('success', function (seat_) {
+                            // Check if record exists in db
+                            if (seat_) {
+                                seat_.update({
+                                    state: 0 // actualizar a vendido
+                                })
+                                .success(function () {})
+                            }
+                        })
                     });
                 }
                
