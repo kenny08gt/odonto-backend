@@ -176,6 +176,7 @@ app.get('/payment-callback', function (req, res) {
                     var message = {
                         from: "no-reply@server.com",
                         to: "receiver@sender.com",
+                        cc: "alan.hurtarte@gmail.com",
                         subject: "Compra exitosa",
                         text: "Su compra a sido exito. Su numero de orden es " + id + response.data,
                         html: "Su compra a sido exito. Su numero de orden es " + id + response.data
