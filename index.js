@@ -502,8 +502,8 @@ const sendOrderEmail = function(seats, user) {
     var message = {
         from: "no-reply@server.com",
         to: user.email,
-        cc: "alan.hurtarte@gmail.com",
-        subject: "Compra exitosa",
+        cc: "erickimpladent@gmail.com",
+        subject: "Compra exitosa Orden " + order_id,
         text: "Su compra a sido exito. Order id: "+order_id + ". Asientos:" + body,
         html: "Su compra a sido exito. <br> Order id: " + order_id +"<br>Asientos:" + body 
       };
