@@ -490,6 +490,7 @@ Array.prototype.insert = function (index, item) {
 };
 
 const sendOrderEmail = function(seats, user) {
+    console.log("send order email");
     let body = "<table>";
     let order_id = users[user.id]['order_id'];
     seats.forEach(function (seat) {
