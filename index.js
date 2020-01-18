@@ -173,36 +173,7 @@ app.get('/payment-callback', function (req, res) {
                 });
 
                 if(resp_code == 1) {
-                    let body = "<table>";
-                    seats.forEach(function (seat) {
-                        body += '<tr><td>fila: ' + seat.row + '</td><td>columna: ' + seat.column + '</td><td>sección: ' + seat.section + '</td><td>curso: ' + seat.course + '</td></tr>'
-                    })
-
-                    body += '</table>';
-                    
-                    var message = {
-                        from: "no-reply@server.com",
-                        to: user.email,
-                        cc: "alan.hurtarte@gmail.com",
-                        subject: "Compra exitosa",
-                        text: "Su compra a sido exito. " + body,
-                        html: "Su compra a sido exito. <br>" + body 
-                      };
-
-                    var transporter = nodemailer.createTransport({
-                        service: 'gmail',
-                        auth: {
-                            user: process.env.EMAIL,
-                            pass: process.env.EMAIL_PASSWORD
-                        }
-                    });
-                    transporter.sendMail(message, function (error, info) {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log('email sent',info.response )
-                        }
-                    });
+                    sendOrderEmail(seats, user);
                 }
             });
 
@@ -517,6 +488,40 @@ if (process.env.NODE_ENV == 'development') {
 Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
 };
+
+const sendOrderEmail = function(seats, user) {
+    let body = "<table>";
+    let order_id = users[user.id]['order_id'];
+    seats.forEach(function (seat) {
+        body += '<tr><td>fila: ' + seat.fila + '</td><td>columna: ' + seat.columna + '</td><td>sección: ' + seat.seccion + '</td><td>curso: ' + seat.curso + '</td></tr>'
+    })
+
+    body += '</table>';
+    
+    var message = {
+        from: "no-reply@server.com",
+        to: user.email,
+        cc: "alan.hurtarte@gmail.com",
+        subject: "Compra exitosa",
+        text: "Su compra a sido exito. Order id: "+order_id + ". Asientos:" + body,
+        html: "Su compra a sido exito. <br> Order id: " + order_id +"<br>Asientos:" + body 
+      };
+
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
+    transporter.sendMail(message, function (error, info) {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('email sent',info.response )
+        }
+    });
+}
 
 const noticeUserConnected = async socket => {
     try {
