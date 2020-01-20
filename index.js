@@ -152,11 +152,11 @@ app.get('/payment-callback', function (req, res) {
                             } else {
                                 seat_.destroy();
                                 seatModified({
-                                    'columna': seat__.column,
-                                    'fila': seat__.row,
+                                    'columna': seat_.column,
+                                    'fila': seat_.row,
                                     'estado': 'free',
-                                    'curso': seat__.course,
-                                    'seccion': seat__.section
+                                    'curso': seat_.course,
+                                    'seccion': seat_.section
                                 });
                             }
                         }
