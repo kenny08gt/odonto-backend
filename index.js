@@ -333,6 +333,8 @@ app.post('/get-payment-form', (req, res) => {
     console.log(MerchantId)
     console.log(ProcessingPass)
     console.log('https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess')
+    console.log(Signature)
+    console.log(order_id)
     // var SignatureRef=xmlDoc.getElementsByTagName("Signature")[0].childNodes[0];
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
