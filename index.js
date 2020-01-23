@@ -330,7 +330,9 @@ app.post('/get-payment-form', (req, res) => {
     var AcquirerId = process.env.ACQUIRER_ID;
     var Currency = process.env.CURRENCY;
     var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64'));
-
+    console.log(MerchantId)
+    console.log(ProcessingPass)
+    console.log('https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess')
     // var SignatureRef=xmlDoc.getElementsByTagName("Signature")[0].childNodes[0];
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
