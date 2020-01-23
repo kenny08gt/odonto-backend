@@ -506,8 +506,8 @@ const sendOrderEmail = function(seats, user) {
         to: user.email,
         cc: "erickimpladent@gmail.com",
         subject: "Compra exitosa Orden " + order_id,
-        text: "Su compra a sido exito. Order id: "+order_id + ". Asientos:" + body,
-        html: "Su compra a sido exito. <br> Order id: " + order_id +"<br>Asientos:" + body 
+        text: "Su compra ha sido exitosa, Bienvenido a Unbiased 2020. Order id: "+order_id + ". Asientos:" + body,
+        html: "Su compra ha sido exitosa. <br> Order id: " + order_id +"<br>Asientos:" + body 
       };
 
     var transporter = nodemailer.createTransport({
