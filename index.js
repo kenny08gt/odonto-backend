@@ -14,6 +14,8 @@ const cors = require('cors');
 var convert = require('xml-js');
 var sha1 = require('sha1');
 
+var enviroment = "marlin"
+
 var PreXmlInfo = require('./preprocessingtoken');
 
 const saltRounds = 12;
@@ -91,7 +93,7 @@ app.get('/payment-callback', function (req, res) {
     // axios.post('', params)
     axios({
         method: 'post',
-        url: 'https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
+        url: 'https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
         headers: {},
         data: params
     })
@@ -333,7 +335,7 @@ app.post('/get-payment-form', (req, res) => {
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
 
-    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
+    axios.post('https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
         .then(response => {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             users[user.id]['order_id'] = order_id;
