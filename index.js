@@ -335,6 +335,7 @@ app.post('/get-payment-form', (req, res) => {
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.MerchantId = MerchantId;
+    console.log(xmlDoc)
     axios.post('https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
         .then(response => {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
