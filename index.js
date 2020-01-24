@@ -222,7 +222,7 @@ app.post('/register', function (req, res) {
                             plain: true
                         }))
                         console.log(created)
-                        req.session.user = user.dataValues;
+                        //req.session.user = user.dataValues;
                         res.json({
                             state: true,
                             message: 'Registro exitoso!',
