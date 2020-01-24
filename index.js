@@ -14,7 +14,7 @@ const cors = require('cors');
 var convert = require('xml-js');
 var sha1 = require('sha1');
 
-var enviroment = "marlin"
+var enviroment = "ecm"
 
 var PreXmlInfo = require('./preprocessingtoken');
 
@@ -43,6 +43,7 @@ var sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USERNAME, 
 let Seat = require("./models/Seat")(sequelize, DataTypes);
 let User = require("./models/User")(sequelize, DataTypes);
 let Transaction = require("./models/Transaction")(sequelize, DataTypes);
+let Order = require("./models/Order")(sequelize, DataTypes);
 
 // Delete asientos bloqueados que se quedaron clonados
 Seat.findAll({
@@ -122,9 +123,9 @@ app.get('/payment-callback', function (req, res) {
                 user_id: user.id,
                 order_id: id,
                 state: resp_code, //1 exitoso 2 denegado 3 error
-                seats: '',
-                transaction_raw: ''
-            }).then(function () {
+                seats: seats,
+                transaction_raw: response.data
+            }).then(function (transaction) {
 
                 seats.forEach(function (seat) {
                     Seat.findOne({
@@ -142,6 +143,12 @@ app.get('/payment-callback', function (req, res) {
                                     state: 0 // actualizar a vendido
                                 })
                                 .then(function (seat__) {
+                                    Order.create({
+                                        user_id: user.id,
+                                        transaction_id: transaction.id,
+                                        seat_id: seat__.id,
+                                        uuid: transaction.order_id,
+                                    })
                                     console.log('seat updated');
                                     seatModified({
                                         'columna': seat__.column,

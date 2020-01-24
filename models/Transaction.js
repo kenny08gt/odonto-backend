@@ -10,7 +10,7 @@ module.exports = function (sequelize, DataTypes) {
         order_id: DataTypes.STRING,
         state: DataTypes.INTEGER,
         seats: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT('long'),
             get: function () {
                 var seats = this.getDataValue('seats');
                 return JSON.parse(seats);
@@ -18,7 +18,7 @@ module.exports = function (sequelize, DataTypes) {
         },
         transaction: DataTypes.STRING,
         transaction_raw: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT('long'),
             get: function () {
                 var seats = this.getDataValue('transaction_raw');
                 return JSON.parse(seats);
