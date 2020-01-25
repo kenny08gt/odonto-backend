@@ -737,6 +737,7 @@ io.on("connection", socket => {
                 }
             }).then(function (seat) {
                 if (seat === null) {
+                    console.log('Asiento no encontrado para liberar',data);
                     callback({
                         status: false,
                         message: 'No se encontro el asiento'
