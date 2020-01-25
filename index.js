@@ -94,7 +94,7 @@ app.get('/payment-callback', function (req, res) {
     // axios.post('', params)
     axios({
         method: 'post',
-        url: 'https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
+        url: 'https://' + enviroment + '.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
         headers: {},
         data: params
     })
@@ -119,29 +119,29 @@ app.get('/payment-callback', function (req, res) {
             let seats = timers[user.id]['seats'];
             console.log('seats');
             console.log(seats);
-            Transaction.create({
+            let transaction = await Transaction.create({
                 user_id: user.id,
                 order_id: id,
                 state: resp_code, //1 exitoso 2 denegado 3 error
                 seats: seats.toString(),
                 transaction_raw: response.data
-            }).then(function (transaction) {
+            });
 
-                seats.forEach(function (seat) {
-                    Seat.findOne({
-                        where: {
-                            row: seat.fila,
-                            column: seat.columna,
-                            section: seat.seccion,
-                            course: seat.curso,
-                        }
-                    }).then(function (seat_) {
-                        // Check if record exists in db
-                        if (seat_) {
-                            if (resp_code == 1) {
-                                seat_.update({
-                                    state: 0 // actualizar a vendido
-                                })
+            seats.forEach(function (seat) {
+                Seat.findOne({
+                    where: {
+                        row: seat.fila,
+                        column: seat.columna,
+                        section: seat.seccion,
+                        course: seat.curso,
+                    }
+                }).then(function (seat_) {
+                    // Check if record exists in db
+                    if (seat_) {
+                        if (resp_code == 1) {
+                            seat_.update({
+                                state: 0 // actualizar a vendido
+                            })
                                 .then(function (seat__) {
                                     Order.create({
                                         user_id: user.id,
@@ -158,33 +158,33 @@ app.get('/payment-callback', function (req, res) {
                                         'seccion': seat__.section
                                     });
                                 });
-                            } else {
-                                seat_.destroy();
-                                seatModified({
-                                    'columna': seat_.column,
-                                    'fila': seat_.row,
-                                    'estado': 'free',
-                                    'curso': seat_.course,
-                                    'seccion': seat_.section
-                                });
-                            }
+                        } else {
+                            seat_.destroy();
+                            seatModified({
+                                'columna': seat_.column,
+                                'fila': seat_.row,
+                                'estado': 'free',
+                                'curso': seat_.course,
+                                'seccion': seat_.section
+                            });
                         }
-                    }).catch(error => {
-                        console.log('trono el findone');
-                        console.log(error);
-                    })
-                });
-
-                let socket = users[user.id]['socket'];
-                socket.emit('payment.result.' + user.id, {
-                    reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text,
-                    status: resp_code //1 exitoso 2 denegado 3 error
-                });
-
-                if(resp_code == 1) {
-                    sendOrderEmail(seats, user);
-                }
+                    }
+                }).catch(error => {
+                    console.log('trono el findone');
+                    console.log(error);
+                })
             });
+
+            let socket = users[user.id]['socket'];
+            socket.emit('payment.result.' + user.id, {
+                reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text,
+                status: resp_code //1 exitoso 2 denegado 3 error
+            });
+
+            if (resp_code == 1) {
+                sendOrderEmail(seats, user);
+            }
+
 
         })
         .catch(error => {
@@ -304,7 +304,8 @@ app.post('/report', (req, res) => {
                     'name': seat.name,
                     'register_number': seat.register_number,
                     'university': seat.university,
-                    'no_document': seat.no_document
+                    'no_document': seat.no_document,
+                    'email': ''
                 }
             })
             res.json({
@@ -337,13 +338,13 @@ app.post('/get-payment-form', (req, res) => {
     var AcquirerId = process.env.ACQUIRER_ID;
     var Currency = process.env.CURRENCY;
     var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64'));
-    
+
     // var SignatureRef=xmlDoc.getElementsByTagName("Signature")[0].childNodes[0];
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.MerchantId = MerchantId;
 
-    axios.post('https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
+    axios.post('https://' + enviroment + '.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
         .then(response => {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             users[user.id]['order_id'] = order_id;
@@ -499,7 +500,7 @@ Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
 };
 
-const sendOrderEmail = function(seats, user) {
+const sendOrderEmail = function (seats, user) {
     console.log("send order email");
     let body = "<table>";
     let order_id = users[user.id]['order_id'];
@@ -508,15 +509,15 @@ const sendOrderEmail = function(seats, user) {
     })
 
     body += '</table>';
-    
+
     var message = {
         from: "no-reply@server.com",
         to: user.email,
         cc: "erickimpladent@gmail.com",
         subject: "Compra exitosa Orden " + order_id,
-        text: "Su compra ha sido exitosa, Bienvenido a Unbiased 2020. Order id: "+order_id + ". Asientos:" + body,
-        html: "Su compra ha sido exitosa. <br> Order id: " + order_id +"<br>Asientos:" + body 
-      };
+        text: "Su compra ha sido exitosa, Bienvenido a Unbiased 2020. Order id: " + order_id + ". Asientos:" + body,
+        html: "Su compra ha sido exitosa. <br> Order id: " + order_id + "<br>Asientos:" + body
+    };
 
     var transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -529,7 +530,7 @@ const sendOrderEmail = function(seats, user) {
         if (error) {
             console.log(error);
         } else {
-            console.log('email sent',info.response )
+            console.log('email sent', info.response)
         }
     });
 }
