@@ -868,6 +868,16 @@ let handleTimer = function (socket, timeleft, callback) {
             clearInterval(downloadTimer);
             callback('countdown finished');
             console.log('fnished countdown');
+
+            for (var key in users) {
+                if (users.hasOwnProperty(key)) {
+                    if (users[key]['socket'] === socket) {
+                        // call function
+                        deleteTimer(key);
+                        break;
+                    }
+                }
+            }
         }
     }, 1000);
 
