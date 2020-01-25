@@ -119,16 +119,14 @@ app.get('/payment-callback', function (req, res) {
             let seats = timers[user.id]['seats'];
             console.log('seats');
             console.log(seats);
-            let transaction = Transaction.create({
+            Transaction.create({
                 user_id: user.id,
                 order_id: id,
                 state: resp_code, //1 exitoso 2 denegado 3 error
                 seats: seats.toString(),
                 transaction_raw: response.data
-            })
-            console.log('transaction',transaction);
-            //.then(function (transaction) {
-
+            }).then(function (transaction) {
+console.log('transaction', transaction);
                 seats.forEach(function (seat) {
                     Seat.findOne({
                         where: {
@@ -186,7 +184,7 @@ app.get('/payment-callback', function (req, res) {
                 if(resp_code == 1) {
                     sendOrderEmail(seats, user);
                 }
-           // });
+            });
 
         })
         .catch(error => {
