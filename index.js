@@ -802,6 +802,11 @@ let deleteTimer = (user_id) => {
 
     let seats = timers[user_id]['seats'];
 
+    if(!seats) {
+        console.log('seats not found related with user '+user_id);
+        return false;
+    }
+
     seats.forEach(data => {
         Seat.findOne({
             where: {
