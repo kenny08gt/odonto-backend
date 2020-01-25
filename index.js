@@ -123,7 +123,7 @@ app.get('/payment-callback', function (req, res) {
                 user_id: user.id,
                 order_id: id,
                 state: resp_code, //1 exitoso 2 denegado 3 error
-                seats: seats,
+                seats: seats.toString(),
                 transaction_raw: response.data
             }).then(function (transaction) {
 
