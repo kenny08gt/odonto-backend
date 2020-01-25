@@ -564,10 +564,10 @@ const generateOrderNumber = () => {
 
 const seatModified = async data => {
     try {
-        console.log('sockets ' + Object.keys(sockets).length);
+  //      console.log('sockets ' + Object.keys(sockets).length);
         for (var key in sockets) {
             if (sockets.hasOwnProperty(key)) {
-                console.log(key + " -> " + sockets[key]);
+//                console.log(key + " -> " + sockets[key]);
                 socket_ = sockets[key];
                 socket_.emit('newSeatModified', data);
             }
