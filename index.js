@@ -123,10 +123,10 @@ app.get('/payment-callback', function (req, res) {
                 user_id: user.id,
                 order_id: id,
                 state: resp_code, //1 exitoso 2 denegado 3 error
-                seats: seats.toString(),
+                seats: JSON.stringify(seats),
                 transaction_raw: response.data
             }).then(function (transaction) {
-console.log('transaction', transaction);
+console.log('transaction', transaction.order_id);
                 seats.forEach(function (seat) {
                     Seat.findOne({
                         where: {
@@ -182,7 +182,7 @@ console.log('transaction', transaction);
                 });
 
                 if(resp_code == 1) {
-                    sendOrderEmail(seats, user);
+                //    sendOrderEmail(seats, user);
                 }
             });
 
