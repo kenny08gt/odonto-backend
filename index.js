@@ -125,8 +125,7 @@ app.get('/payment-callback', function (req, res) {
                 state: resp_code, //1 exitoso 2 denegado 3 error
                 seats: JSON.stringify(seats),
                 transaction_raw: response.data
-            }).then(function (transaction) {
-console.log('transaction', transaction.order_id);
+            }).then(function () {
                 seats.forEach(function (seat) {
                     Seat.findOne({
                         where: {
@@ -143,20 +142,34 @@ console.log('transaction', transaction.order_id);
                                     state: 0 // actualizar a vendido
                                 })
                                 .then(function (seat__) {
-                                    Order.create({
+
+                                    Transaction.where({
                                         user_id: user.id,
-                                        transaction_id: transaction.id,
-                                        seat_id: seat__.id,
-                                        uuid: transaction.order_id,
+                                        order_id: id,
+                                        state: resp_code, //1 exitoso 2 denegado 3 error
+                                        seats: JSON.stringify(seats),
+                                        transaction_raw: response.data
+                                    }).then( (transaction) => {
+                                        Order.create({
+                                            user_id: user.id,
+                                            transaction_id: transaction.id,
+                                            seat_id: seat__.id,
+                                            uuid: transaction.order_id,
+                                        })
+                                        console.log('seat updated');
+                                        seatModified({
+                                            'columna': seat__.column,
+                                            'fila': seat__.row,
+                                            'estado': 'sold',
+                                            'curso': seat__.course,
+                                            'seccion': seat__.section
+                                        });
+                                    }).catch((error) => {
+                                        console.log('Transaction not found');
+                                        console.log(error);
                                     })
-                                    console.log('seat updated');
-                                    seatModified({
-                                        'columna': seat__.column,
-                                        'fila': seat__.row,
-                                        'estado': 'sold',
-                                        'curso': seat__.course,
-                                        'seccion': seat__.section
-                                    });
+
+                                  
                                 });
                             } else {
                                 seat_.destroy();
@@ -767,7 +780,7 @@ io.on("connection", socket => {
         }
 
         console.log('countdownStart for socket ' + user.id)
-        var timeleft = 40;
+        var timeleft = 10*60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
         if (timers[user.id] !== undefined) {
             timers[user.id]['timer'] = downloadTimer;
