@@ -800,7 +800,7 @@ let deleteTimer = (user_id) => {
     }
     delete timers[user_id]['timer'];
 
-    let seats = timers[user.id]['seats'];
+    let seats = timers[user_id]['seats'];
 
     seats.forEach(data => {
         Seat.findOne({
