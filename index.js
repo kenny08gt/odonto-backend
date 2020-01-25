@@ -117,8 +117,6 @@ app.get('/payment-callback', function (req, res) {
             // update the table transaction
             // update seats states.
             let seats = timers[user.id]['seats'];
-            console.log('seats');
-            console.log(seats);
             Transaction.create({
                 user_id: user.id,
                 order_id: id,
