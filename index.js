@@ -94,7 +94,7 @@ app.get('/payment-callback', function (req, res) {
     // axios.post('', params)
     axios({
         method: 'post',
-        url: 'https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
+        url: 'https://' + enviroment + '.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
         headers: {},
         data: params
     })
@@ -141,36 +141,38 @@ app.get('/payment-callback', function (req, res) {
                                 seat_.update({
                                     state: 0 // actualizar a vendido
                                 })
-                                .then(function (seat__) {
+                                    .then(function (seat__) {
 
-                                    Transaction.where({
-                                        user_id: user.id,
-                                        order_id: id,
-                                        state: resp_code, //1 exitoso 2 denegado 3 error
-                                        seats: JSON.stringify(seats),
-                                        transaction_raw: response.data
-                                    }).then( (transaction) => {
-                                        Order.create({
-                                            user_id: user.id,
-                                            transaction_id: transaction.id,
-                                            seat_id: seat__.id,
-                                            uuid: transaction.order_id,
+                                        Transaction.findOne({
+                                            where: {
+                                                user_id: user.id,
+                                                order_id: id,
+                                                state: resp_code, //1 exitoso 2 denegado 3 error
+                                                seats: JSON.stringify(seats),
+                                                transaction_raw: response.data
+                                            }
+                                        }).then((transaction) => {
+                                            Order.create({
+                                                user_id: user.id,
+                                                transaction_id: transaction.id,
+                                                seat_id: seat__.id,
+                                                uuid: transaction.order_id,
+                                            })
+                                            console.log('seat updated');
+                                            seatModified({
+                                                'columna': seat__.column,
+                                                'fila': seat__.row,
+                                                'estado': 'sold',
+                                                'curso': seat__.course,
+                                                'seccion': seat__.section
+                                            });
+                                        }).catch((error) => {
+                                            console.log('Transaction not found');
+                                            console.log(error);
                                         })
-                                        console.log('seat updated');
-                                        seatModified({
-                                            'columna': seat__.column,
-                                            'fila': seat__.row,
-                                            'estado': 'sold',
-                                            'curso': seat__.course,
-                                            'seccion': seat__.section
-                                        });
-                                    }).catch((error) => {
-                                        console.log('Transaction not found');
-                                        console.log(error);
-                                    })
 
-                                  
-                                });
+
+                                    });
                             } else {
                                 seat_.destroy();
                                 seatModified({
@@ -194,8 +196,8 @@ app.get('/payment-callback', function (req, res) {
                     status: resp_code //1 exitoso 2 denegado 3 error
                 });
 
-                if(resp_code == 1) {
-                //    sendOrderEmail(seats, user);
+                if (resp_code == 1) {
+                    //    sendOrderEmail(seats, user);
                 }
             });
 
@@ -351,13 +353,13 @@ app.post('/get-payment-form', (req, res) => {
     var AcquirerId = process.env.ACQUIRER_ID;
     var Currency = process.env.CURRENCY;
     var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64'));
-    
+
     // var SignatureRef=xmlDoc.getElementsByTagName("Signature")[0].childNodes[0];
     // SignatureRef.nodeValue = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.MerchantId = MerchantId;
 
-    axios.post('https://'+enviroment+'.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
+    axios.post('https://' + enviroment + '.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
         .then(response => {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             users[user.id]['order_id'] = order_id;
@@ -513,7 +515,7 @@ Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
 };
 
-const sendOrderEmail = function(seats, user) {
+const sendOrderEmail = function (seats, user) {
     console.log("send order email");
     let body = "<table>";
     let order_id = users[user.id]['order_id'];
@@ -522,15 +524,15 @@ const sendOrderEmail = function(seats, user) {
     })
 
     body += '</table>';
-    
+
     var message = {
         from: "no-reply@server.com",
         to: user.email,
         cc: "erickimpladent@gmail.com",
         subject: "Compra exitosa Orden " + order_id,
-        text: "Su compra ha sido exitosa, Bienvenido a Unbiased 2020. Order id: "+order_id + ". Asientos:" + body,
-        html: "Su compra ha sido exitosa. <br> Order id: " + order_id +"<br>Asientos:" + body 
-      };
+        text: "Su compra ha sido exitosa, Bienvenido a Unbiased 2020. Order id: " + order_id + ". Asientos:" + body,
+        html: "Su compra ha sido exitosa. <br> Order id: " + order_id + "<br>Asientos:" + body
+    };
 
     var transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -543,7 +545,7 @@ const sendOrderEmail = function(seats, user) {
         if (error) {
             console.log(error);
         } else {
-            console.log('email sent',info.response )
+            console.log('email sent', info.response)
         }
     });
 }
@@ -577,10 +579,10 @@ const generateOrderNumber = () => {
 
 const seatModified = async data => {
     try {
-  //      console.log('sockets ' + Object.keys(sockets).length);
+        //      console.log('sockets ' + Object.keys(sockets).length);
         for (var key in sockets) {
             if (sockets.hasOwnProperty(key)) {
-//                console.log(key + " -> " + sockets[key]);
+                //                console.log(key + " -> " + sockets[key]);
                 socket_ = sockets[key];
                 socket_.emit('newSeatModified', data);
             }
@@ -640,8 +642,8 @@ io.on("connection", socket => {
             return false;
         }
 
-       //call function
-       deleteTimer(user.id);
+        //call function
+        deleteTimer(user.id);
     });
 
     socket.on('close-timer', function (data) {
@@ -750,7 +752,7 @@ io.on("connection", socket => {
                 }
             }).then(function (seat) {
                 if (seat === null) {
-                    console.log('Asiento no encontrado para liberar',data);
+                    console.log('Asiento no encontrado para liberar', data);
                     callback({
                         status: false,
                         message: 'No se encontro el asiento'
@@ -780,7 +782,7 @@ io.on("connection", socket => {
         }
 
         console.log('countdownStart for socket ' + user.id)
-        var timeleft = 10*60;
+        var timeleft = 10 * 60;
         var downloadTimer = handleTimer(socket, timeleft, callback);
         if (timers[user.id] !== undefined) {
             timers[user.id]['timer'] = downloadTimer;
@@ -816,8 +818,8 @@ let deleteTimer = (user_id) => {
 
     let seats = timers[user_id]['seats'];
 
-    if(!seats) {
-        console.log('seats not found related with user '+user_id);
+    if (!seats) {
+        console.log('seats not found related with user ' + user_id);
         return false;
     }
 
@@ -831,7 +833,7 @@ let deleteTimer = (user_id) => {
             }
         }).then(function (seat) {
             if (seat === null) {
-              console.log('No se pudo liberar asiento, al borrar timer',data)
+                console.log('No se pudo liberar asiento, al borrar timer', data)
             } else {
                 seat.destroy();
                 seatModified({
