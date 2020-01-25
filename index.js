@@ -14,7 +14,7 @@ const cors = require('cors');
 var convert = require('xml-js');
 var sha1 = require('sha1');
 
-var enviroment = "ecm"
+var enviroment = "marlin"
 
 var PreXmlInfo = require('./preprocessingtoken');
 
@@ -197,7 +197,7 @@ app.get('/payment-callback', function (req, res) {
                 });
 
                 if (resp_code == 1) {
-                    //    sendOrderEmail(seats, user);
+                    sendOrderEmail(seats, user);
                 }
             });
 
