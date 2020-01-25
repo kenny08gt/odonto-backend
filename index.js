@@ -119,7 +119,7 @@ app.get('/payment-callback', function (req, res) {
             let seats = timers[user.id]['seats'];
             console.log('seats');
             console.log(seats);
-            let transaction = await Transaction.create({
+            let transaction = Transaction.create({
                 user_id: user.id,
                 order_id: id,
                 state: resp_code, //1 exitoso 2 denegado 3 error
