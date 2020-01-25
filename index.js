@@ -766,7 +766,7 @@ io.on("connection", socket => {
         }
 
         console.log('countdownStart for socket ' + user.id)
-        var timeleft = 20;
+        var timeleft = 40;
         var downloadTimer = handleTimer(socket, timeleft, callback);
         if (timers[user.id] !== undefined) {
             timers[user.id]['timer'] = downloadTimer;
