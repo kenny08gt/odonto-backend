@@ -303,11 +303,26 @@ app.post('/report', (req, res) => {
     // if (req.session.user && req.cookies.user_sid && !req.session.user.admin) {
     //     res.redirect('/');
     // } else {
-    Seat.findAll({
-        where: {
-            state: 0, // Estado vendido
-        }
-    }).then(function (seats) {
+
+        const { QueryTypes } = require('sequelize');
+        let seats = await sequelize.query('select s.no_document,s.university,s.register_number,s.name, s.state, u.email, o.transaction_id, o.seat_id, s.column, s.row, s.section, s.course from orders o join seats s on s.id = o.seat_id join users u on u.id = o.user_id  where s.state = 0;', {
+          // A function (or false) for logging your queries
+          // Will get called for every SQL query that gets sent
+          // to the server.
+          logging: console.log,
+        
+          // If plain is true, then sequelize will only return the first
+          // record of the result set. In case of false it will return all records.
+          plain: false,
+        
+          // Set this to true if you don't have a model definition for your query.
+          raw: true,
+        
+          // The type of query you are executing. The query type affects how results are formatted before they are passed back.
+          type: QueryTypes.SELECT
+        });
+
+
         if (seats === null) {
             res.json({
                 state: false,
@@ -334,7 +349,6 @@ app.post('/report', (req, res) => {
                 seats_solds: seats
             })
         }
-    });
     // }
 });
 
