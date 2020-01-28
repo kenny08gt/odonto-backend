@@ -333,7 +333,7 @@ app.post('/report', (req, res) => {
     // }
 });
 
-app.post('/get-payment-form', (req, res) => {
+app.post('/get-payment-form', async (req, res) => {
     console.log(req.body);
     let seats = req.body.seats;
     let user = req.body.user;
