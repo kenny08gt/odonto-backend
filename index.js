@@ -14,8 +14,8 @@ const cors = require('cors');
 var convert = require('xml-js');
 var sha1 = require('sha1');
 
-var enviroment = "marlin"
-//var enviroment = "ecm"
+//var enviroment = "marlin"
+var enviroment = "ecm"
 
 var PreXmlInfo = require('./preprocessingtoken');
 
