@@ -305,7 +305,7 @@ app.post('/report', async (req, res) => {
     // } else {
 
         const { QueryTypes } = require('sequelize');
-        let seats = await sequelize.query('select s.no_document,s.university,s.register_number,s.name, s.state, u.email, o.transaction_id, o.seat_id, s.column, s.row, s.section, s.course from orders o join seats s on s.id = o.seat_id join users u on u.id = o.user_id  where s.state = 0;', {
+        let seats = await sequelize.query('select s.precio, s.no_document,s.university,s.register_number,s.name, s.state, u.email, o.transaction_id, o.seat_id, s.column, s.row, s.section, s.course from orders o join seats s on s.id = o.seat_id join users u on u.id = o.user_id  where s.state = 0;', {
           // A function (or false) for logging your queries
           // Will get called for every SQL query that gets sent
           // to the server.
@@ -341,7 +341,8 @@ app.post('/report', async (req, res) => {
                     'register_number': seat.register_number,
                     'university': seat.university,
                     'no_document': seat.no_document,
-                    'email': seat.email
+                    'email': seat.email,
+                    'precio': seat.precio
                 }
             })
             res.json({
