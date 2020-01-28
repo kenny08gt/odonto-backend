@@ -14,7 +14,8 @@ const cors = require('cors');
 var convert = require('xml-js');
 var sha1 = require('sha1');
 
-var enviroment = "marlin"
+//var enviroment = "marlin"
+var enviroment = "ecm"
 
 var PreXmlInfo = require('./preprocessingtoken');
 
@@ -139,7 +140,8 @@ app.get('/payment-callback', function (req, res) {
                                 seat_.update({
                                     state: 0 // actualizar a vendido
                                 })
-                                    .then(function (seat__) {
+                                    
+                                .then(function (seat__) {
 
                                         Transaction.findOne({
                                             where: {
@@ -333,6 +335,7 @@ app.post('/report', (req, res) => {
 
 app.post('/get-payment-form', (req, res) => {
     console.log(req.body);
+    let seats = req.body.seats;
     let user = req.body.user;
     var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo, { compact: true, spaces: 4 }));
     var AmountRef = xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount;
@@ -363,7 +366,50 @@ app.post('/get-payment-form', (req, res) => {
             users[user.id]['order_id'] = order_id;
             orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
             orders[order_id] = user;
-            let seats = timers[user.id]['seats'];
+//            let seats = timers[user.id]['seats'];
+
+            for (var key in seats) {
+                console.log('key ' + key);
+                if (seats.hasOwnProperty(key)) {
+                    seat = seats[key]; 
+                    let seat_old = await Seat.findOne({
+                        where: {
+                            row: seat.fila,
+                            column: seat.columna,
+                            section: seat.seccion,
+                            course: seat.curso
+                        }
+                    });
+                    if (seat_old === null) {
+                        Seat.create({
+                            row: seat.fila,
+                            column: seat.columna,
+                            section: seat.seccion,
+                            course: seat.curso,
+                            state: 1, //bloqueado aun
+                            'name': seat.name,
+                            'register_number': seat.register_number,
+                            'university': seat.university,
+                            'no_document': seat.no_document,
+                            'precio': seat.precio
+                        });
+                    } else {
+                        seat_old.destroy();
+                        Seat.create({
+                            row: seat.fila,
+                            column: seat.columna,
+                            section: seat.seccion,
+                            course: seat.curso,
+                            state: 1, // bloqueado aun
+                            'name': seat.name,
+                            'register_number': seat.register_number,
+                            'university': seat.university,
+                            'no_document': seat.no_document,
+                            'precio': seat.precio
+                        });
+                    }
+                }
+            }
 
             seats = seats.map(function (seat) {
                 seat.order_id = order_id;
