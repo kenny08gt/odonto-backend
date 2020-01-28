@@ -298,7 +298,7 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-app.post('/report', (req, res) => {
+app.post('/report', async (req, res) => {
     console.log('report get');
     // if (req.session.user && req.cookies.user_sid && !req.session.user.admin) {
     //     res.redirect('/');
