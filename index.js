@@ -361,7 +361,7 @@ app.post('/get-payment-form', async (req, res) => {
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.MerchantId = MerchantId;
 
     axios.post('https://' + enviroment + '.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
-        .then(response => {
+        .then(async (response) => {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             users[user.id]['order_id'] = order_id;
             orders[data.HostedPagePreprocessResponse.SecurityToken._text] = user;
