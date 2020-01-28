@@ -277,7 +277,12 @@ app.post('/login', function (req, res) {
             users[user.id]['socket'] = null;
             // TODO: Remove this
             //    user.admin = true;
-            console.log(user);
+            
+            if(user.email == 'erickimpladent@gmail.com') {
+                user.firstname = 'Erick';
+                user.lastname = 'Hernandez';
+            }
+
             res.json({
                 state: true,
                 message: 'Login exitoso!',
