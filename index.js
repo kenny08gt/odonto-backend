@@ -395,7 +395,7 @@ app.post('/get-payment-form', async (req, res) => {
                             'name': seat.name,
                             'register_number': seat.register_number,
                             'university': seat.university,
-                            'no_document': seat.no_document,
+                            'no_document': order_id,
                             'precio': seat.precio
                         });
                     } else {
@@ -409,7 +409,7 @@ app.post('/get-payment-form', async (req, res) => {
                             'name': seat.name,
                             'register_number': seat.register_number,
                             'university': seat.university,
-                            'no_document': seat.no_document,
+                            'no_document': order_id,
                             'precio': seat.precio
                         });
                     }
