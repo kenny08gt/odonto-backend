@@ -322,6 +322,7 @@ app.post('/report', async (req, res) => {
           type: QueryTypes.SELECT
         });
 
+        console.log(seats);
 
         if (seats === null) {
             res.json({
