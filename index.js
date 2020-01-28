@@ -322,7 +322,7 @@ app.post('/report', async (req, res) => {
           type: QueryTypes.SELECT
         });
 
-        console.log(seats);
+//        console.log(seats);
 
         if (seats === null) {
             res.json({
@@ -341,7 +341,7 @@ app.post('/report', async (req, res) => {
                     'register_number': seat.register_number,
                     'university': seat.university,
                     'no_document': seat.no_document,
-                    'email': ''
+                    'email': seat.email
                 }
             })
             res.json({
