@@ -519,6 +519,7 @@ app.post('/save_order', async (req, res) => {
             seat: seat,
         });
     } catch (error) {
+        console.log("my error: " +error)
         res.json({
             status: false,
             message: 'Error al guardar asientos',
