@@ -479,7 +479,7 @@ app.post('/save_order', async (req, res) => {
                         'university': seat.university,
                         'no_document': seat.no_document,
                         'precio': seat.precio
-                    });
+                    },{isNewRecord:true});
                     await Order.create({
                         user_id: req.body.user.id,
                         transaction_id: null,
@@ -508,7 +508,7 @@ app.post('/save_order', async (req, res) => {
                         'university': seat.university,
                         'no_document': seat.no_document,
                         'precio': seat.precio
-                    });
+                    },{isNewRecord:true});
                     console.log(seatCreated)
                     await Order.create({
                         user_id: req.body.user.id,
