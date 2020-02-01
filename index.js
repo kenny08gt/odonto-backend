@@ -402,7 +402,7 @@ app.post('/get-payment-form', async (req, res) => {
                         }
                     });
                     if (seat_old === null) {
-                        Seat.create({
+                        await Seat.create({
                             row: seat.fila,
                             column: seat.columna,
                             section: seat.seccion,
@@ -415,8 +415,8 @@ app.post('/get-payment-form', async (req, res) => {
                             'precio': seat.precio
                         });
                     } else {
-                        seat_old.destroy();
-                        Seat.create({
+                        await seat_old.destroy();
+                        await Seat.create({
                             row: seat.fila,
                             column: seat.columna,
                             section: seat.seccion,
@@ -480,6 +480,12 @@ app.post('/save_order', async (req, res) => {
                         'no_document': seat.no_document,
                         'precio': seat.precio
                     });
+                    await Order.create({
+                        user_id: req.body.user.id,
+                        transaction_id: null,
+                        seat_id: seatCreated.id,
+                        uuid: null,
+                    })
                     const { column, row, state, course, section } = seatCreated;
                     seatModified({
                         'columna': column,
@@ -502,6 +508,12 @@ app.post('/save_order', async (req, res) => {
                         'no_document': seat.no_document,
                         'precio': seat.precio
                     });
+                    await Order.create({
+                        user_id: req.body.user.id,
+                        transaction_id: null,
+                        seat_id: seatCreated.id,
+                        uuid: null,
+                    })
                     const { column, row, state, course, section } = seatCreated;
                     seatModified({
                         'columna': column,
