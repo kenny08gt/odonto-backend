@@ -486,6 +486,7 @@ app.post('/save_order', async (req, res) => {
                         seat_id: seatCreated.id,
                         uuid: null,
                     })
+                    console.log(seatCreated)
                     const { column, row, state, course, section } = seatCreated;
                     seatModified({
                         'columna': column,
@@ -508,6 +509,7 @@ app.post('/save_order', async (req, res) => {
                         'no_document': seat.no_document,
                         'precio': seat.precio
                     });
+                    console.log(seatCreated)
                     await Order.create({
                         user_id: req.body.user.id,
                         transaction_id: null,
