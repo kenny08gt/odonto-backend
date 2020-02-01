@@ -479,14 +479,22 @@ app.post('/save_order', async (req, res) => {
                         'university': seat.university,
                         'no_document': seat.no_document,
                         'precio': seat.precio
-                    },{isNewRecord:true});
+                    });
+
+                    let tempSeat = await Seat.findOne({
+                        where: {
+                            row: seat.fila,
+                            column: seat.columna,
+                            section: seat.seccion,
+                            course: seat.curso
+                        }
+                    })
                     await Order.create({
                         user_id: req.body.user.id,
                         transaction_id: null,
-                        seat_id: seatCreated.id,
+                        seat_id: tempSeat.id,
                         uuid: null,
                     })
-                    console.log(seatCreated)
                     const { column, row, state, course, section } = seatCreated;
                     seatModified({
                         'columna': column,
@@ -508,12 +516,19 @@ app.post('/save_order', async (req, res) => {
                         'university': seat.university,
                         'no_document': seat.no_document,
                         'precio': seat.precio
-                    },{isNewRecord:true});
-                    console.log(seatCreated)
+                    });
+                    let tempSeat = await Seat.findOne({
+                        where: {
+                            row: seat.fila,
+                            column: seat.columna,
+                            section: seat.seccion,
+                            course: seat.curso
+                        }
+                    })
                     await Order.create({
                         user_id: req.body.user.id,
                         transaction_id: null,
-                        seat_id: seatCreated.id,
+                        seat_id: tempSeat.id,
                         uuid: null,
                     })
                     const { column, row, state, course, section } = seatCreated;
