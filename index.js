@@ -467,7 +467,6 @@ app.post('/save_order', async (req, res) => {
                         course: seat.curso
                     }
                 });
-                console.log("1");
                 if (seat_old === null) {
                     let seatCreated = await Seat.create({
                         row: seat.fila,
@@ -489,9 +488,7 @@ app.post('/save_order', async (req, res) => {
                         'curso': course,
                         'seccion': section
                     });
-                    console.log("2");
                 } else {
-                    console.log("3");
                     await seat_old.destroy();
                     let seatCreated = await Seat.create({
                         row: seat.fila,
@@ -513,7 +510,6 @@ app.post('/save_order', async (req, res) => {
                         'curso': course,
                         'seccion': section
                     });
-                    console.log("4");
                 }
             }
         }
