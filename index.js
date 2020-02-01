@@ -492,7 +492,7 @@ app.post('/save_order', async (req, res) => {
                     console.log("2");
                 } else {
                     console.log("3");
-                    seat_old.destroy();
+                    await seat_old.destroy();
                     let seatCreated = await Seat.create({
                         row: seat.fila,
                         column: seat.columna,
