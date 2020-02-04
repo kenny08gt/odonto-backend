@@ -276,11 +276,11 @@ app.post('/login', function (req, res) {
             // TODO: Remove this
             //    user.admin = true;
             
-            let strFirsName = user.firstname.trim().split(" ");
-            let strLastName = user.lastname.trim().split(" ");
+            let strFirsName = user.firstname.toString().trim().split(" ");
+            let strLastName = user.lastname.toString().trim().split(" ");
+            console.log(strFirsName);
+            console.log(strLastName);
             try {
-                console.log(strFirsName);
-                console.log(strLastName);
                 if(strFirsName[0]==req.body.firstname && strLastName[0]==req.body.lastname){
                     if(user.email == 'erickimpladent@gmail.com') {
                         user.firstname = 'Erick';
