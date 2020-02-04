@@ -261,9 +261,7 @@ app.post('/login', function (req, res) {
     // var isAdmin =req.body.email == 'erickimpladent@gmail.com';
     User.findOne({
         where: {
-            email: req.body.email,
-            firstname: req.body.firstname,
-            lastname: req.body.lastname
+            email: req.body.email
         }
     }).then(function (user) {
         if (!user) {
@@ -278,15 +276,25 @@ app.post('/login', function (req, res) {
             // TODO: Remove this
             //    user.admin = true;
             
-            if(user.email == 'erickimpladent@gmail.com') {
-                user.firstname = 'Erick';
-                user.lastname = 'Hernandez';
-            }
-
+            let strFirsName = user.firstname.trim().split(" ");
+            let strLastName = user.lastname.trim().split(" ");
+            try {
+                if(strFirsName[0]==req.body.firstname && strLastName[0]==req.body.lastname){
+                    if(user.email == 'erickimpladent@gmail.com') {
+                        user.firstname = 'Erick';
+                        user.lastname = 'Hernandez';
+                    }
+                    res.json({
+                        state: true,
+                        message: 'Login exitoso!',
+                        user: user
+                    });
+                    return;        
+                }
+            } catch (error) {console.log(error);}
             res.json({
-                state: true,
-                message: 'Login exitoso!',
-                user: user
+                state: false,
+                message: 'No existe este usuario or mala combinación de nombre y apellido'
             });
         }
     });
