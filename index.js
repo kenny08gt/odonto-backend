@@ -942,16 +942,18 @@ let deleteTimer = (user_id) => {
             }
         }).then(function (seat) {
             if (seat === null) {
-                console.log('No se pudo liberar asiento, al borrar timer', data)
+                console.log('No se pudo liberar asiento, al borrar timer', data);
             } else {
-                seat.destroy();
-                seatModified({
-                    'columna': seat.column,
-                    'fila': seat.row,
-                    'estado': 'free',
-                    'curso': seat.course,
-                    'seccion': seat.section
-                });
+                if(!(seat.estado==='sold')){
+                    seat.destroy();
+                    seatModified({
+                        'columna': seat.column,
+                        'fila': seat.row,
+                        'estado': 'free',
+                        'curso': seat.course,
+                        'seccion': seat.section
+                    });
+                }
             }
         });
 
