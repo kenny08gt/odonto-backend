@@ -100,7 +100,7 @@ app.get('/payment-callback', function (req, res) {
         data: params
     })
         .then(response => {
-            if (resp_code == 1) {
+            /*if (resp_code == 1) {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else if (resp_code == 2) {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
@@ -108,7 +108,7 @@ app.get('/payment-callback', function (req, res) {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
-            }
+            }*/
 
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             // get the custom order id from the response
