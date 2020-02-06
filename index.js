@@ -188,7 +188,7 @@ app.get('/payment-callback', function (req, res) {
                         console.log('trono el findone');
                         console.log(error);
                     })
-                });
+                }).catch(error=> console.log(`Transaction Create Error:${error}`));
 
                 let socket = users[user.id]['socket'];
                 socket.emit('payment.result.' + user.id, {
