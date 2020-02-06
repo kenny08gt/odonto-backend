@@ -192,7 +192,7 @@ app.get('/payment-callback', function (req, res) {
                         console.log('trono el findone');
                         console.log(error);
                     })
-                }).catch(error=> console.log(`Transaction Create Error:${error}`));
+                });
 
                 let socket = users[user.id]['socket'];
                 console.log('socket del usuario:');
@@ -205,7 +205,7 @@ app.get('/payment-callback', function (req, res) {
                 if (resp_code == 1) {
                     sendOrderEmail(seats, user);
                 }
-            });
+            }).catch(error=> console.log(`Transaction Create Error:${error}`));
 
         })
         .catch(error => {
