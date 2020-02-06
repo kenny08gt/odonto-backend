@@ -93,6 +93,7 @@ app.get('/payment-callback', function (req, res) {
 
     let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
     // axios.post('', params)
+    let seat_by_userRef = null;
     axios({
         method: 'post',
         url: 'https://' + enviroment + '.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
@@ -100,7 +101,10 @@ app.get('/payment-callback', function (req, res) {
         data: params
     })
         .then(response => {
-            /*if (resp_code == 1) {
+            if (resp_code == 1) {
+                let user = orders[id];
+                seat_by_userRef = timers[user.id]['seats'];
+                timers[user.id]['seats']=null;
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else if (resp_code == 2) {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
@@ -108,7 +112,7 @@ app.get('/payment-callback', function (req, res) {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
-            }*/
+            }
 
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             // get the custom order id from the response
@@ -117,7 +121,7 @@ app.get('/payment-callback', function (req, res) {
             //save transaction
             // update the table transaction
             // update seats states.
-            let seats = timers[user.id]['seats'];
+            let seats = seat_by_userRef;
             Transaction.create({
                 user_id: user.id,
                 order_id: id,
