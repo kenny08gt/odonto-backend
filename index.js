@@ -102,6 +102,7 @@ app.get('/payment-callback', function (req, res) {
     })
         .then(response => {
             let user = orders[id];
+            console.log(user?`line 105: user finded`:`line 105:  user not found`);
             seat_by_userRef = timers[user.id]['seats'];
             timers[user.id]['seats']=null;
             if (resp_code == 1) {
