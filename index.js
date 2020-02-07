@@ -115,6 +115,7 @@ app.get('/payment-callback', function (req, res) {
             }
 
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+            console.log('line 118: response data converted');
             // get the custom order id from the response
             let user = orders[id];
 
@@ -122,6 +123,7 @@ app.get('/payment-callback', function (req, res) {
             // update the table transaction
             // update seats states.
             let seats = seat_by_userRef;
+            console.log(seat?`line 125:${seats.length}`:'line 125:sin sientos');
             Transaction.create({
                 user_id: user.id,
                 order_id: id,
@@ -129,6 +131,7 @@ app.get('/payment-callback', function (req, res) {
                 seats: JSON.stringify(seats),
                 transaction_raw: response.data
             }).then(function () {
+                console.log('line 133: Transaction created');
                 seats.forEach(function (seat) {
                     Seat.findOne({
                         where: {
@@ -140,11 +143,12 @@ app.get('/payment-callback', function (req, res) {
                     }).then(function (seat_) {
                         // Check if record exists in db
                         if (seat_) {
+                            console.log('line 145: seat existe');
                             if (resp_code == 1) {
+                                console.log('line 147: response code 1');
                                 seat_.update({
                                     state: 0 // actualizar a vendido
-                                })
-                                    
+                                })    
                                 .then(function (seat__) {
 
                                         Transaction.findOne({
@@ -156,13 +160,14 @@ app.get('/payment-callback', function (req, res) {
                                                 transaction_raw: response.data
                                             }
                                         }).then((transaction) => {
+                                            console.log('line 162: response code 1');
                                             Order.create({
                                                 user_id: user.id,
                                                 transaction_id: transaction.id,
                                                 seat_id: seat__.id,
                                                 uuid: transaction.order_id,
-                                            })
-                                            console.log('seat updated');
+                                            }).catch(error=>console.log(`line 168:${error}`));
+                                            console.log('line 169:seat updated');
                                             seatModified({
                                                 'columna': seat__.column,
                                                 'fila': seat__.row,
@@ -170,14 +175,15 @@ app.get('/payment-callback', function (req, res) {
                                                 'curso': seat__.course,
                                                 'seccion': seat__.section
                                             });
+                                            console.log('line 177: seat modified SOLD');
                                         }).catch((error) => {
                                             console.log('Transaction not found');
                                             console.log(error);
                                         })
-
-
                                     });
                             } else {
+                                console.log('seat modified FREE');
+                                console.log(Object.values(seat_).join('~'));
                                 seat_.destroy();
                                 seatModified({
                                     'columna': seat_.column,
@@ -190,7 +196,6 @@ app.get('/payment-callback', function (req, res) {
                         }
                     }).catch(error => {
                         console.log('trono el findone');
-                        console.log(error);
                     })
                 });
 
