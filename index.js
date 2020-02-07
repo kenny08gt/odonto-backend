@@ -117,7 +117,7 @@ app.get('/payment-callback', function (req, res) {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             console.log('line 118: response data converted');
             // get the custom order id from the response
-            let user = orders[id];
+            //let user = orders[id];
 
             //save transaction
             // update the table transaction
