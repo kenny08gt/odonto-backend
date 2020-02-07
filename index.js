@@ -14,8 +14,8 @@ const cors = require('cors');
 var convert = require('xml-js');
 var sha1 = require('sha1');
 
-//var enviroment = "marlin"
-var enviroment = "ecm"
+var enviroment = "marlin"
+//var enviroment = "ecm"
 
 var PreXmlInfo = require('./preprocessingtoken');
 
@@ -93,6 +93,7 @@ app.get('/payment-callback', function (req, res) {
 
     let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
     // axios.post('', params)
+    let seat_by_userRef = null;
     axios({
         method: 'post',
         url: 'https://' + enviroment + '.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
@@ -100,6 +101,10 @@ app.get('/payment-callback', function (req, res) {
         data: params
     })
         .then(response => {
+            let user = orders[id];
+            console.log(user?`line 105: user finded`:`line 105:  user not found`);
+            seat_by_userRef = timers[user.id]['seats'];
+            timers[user.id]['seats']=null;
             if (resp_code == 1) {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else if (resp_code == 2) {
@@ -111,13 +116,15 @@ app.get('/payment-callback', function (req, res) {
             }
 
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+            console.log('line 118: response data converted');
             // get the custom order id from the response
-            let user = orders[id];
+            //let user = orders[id];
 
             //save transaction
             // update the table transaction
             // update seats states.
-            let seats = timers[user.id]['seats'];
+            let seats = seat_by_userRef;
+            console.log(seat?`line 125:${seats.length}`:'line 125:sin sientos');
             Transaction.create({
                 user_id: user.id,
                 order_id: id,
@@ -125,6 +132,7 @@ app.get('/payment-callback', function (req, res) {
                 seats: JSON.stringify(seats),
                 transaction_raw: response.data
             }).then(function () {
+                console.log('line 133: Transaction created');
                 seats.forEach(function (seat) {
                     Seat.findOne({
                         where: {
@@ -136,11 +144,12 @@ app.get('/payment-callback', function (req, res) {
                     }).then(function (seat_) {
                         // Check if record exists in db
                         if (seat_) {
+                            console.log('line 145: seat existe');
                             if (resp_code == 1) {
+                                console.log('line 147: response code 1');
                                 seat_.update({
                                     state: 0 // actualizar a vendido
-                                })
-                                    
+                                })    
                                 .then(function (seat__) {
 
                                         Transaction.findOne({
@@ -152,13 +161,14 @@ app.get('/payment-callback', function (req, res) {
                                                 transaction_raw: response.data
                                             }
                                         }).then((transaction) => {
+                                            console.log('line 162: response code 1');
                                             Order.create({
                                                 user_id: user.id,
                                                 transaction_id: transaction.id,
                                                 seat_id: seat__.id,
                                                 uuid: transaction.order_id,
-                                            })
-                                            console.log('seat updated');
+                                            }).catch(error=>console.log(`line 168:${error}`));
+                                            console.log('line 169:seat updated');
                                             seatModified({
                                                 'columna': seat__.column,
                                                 'fila': seat__.row,
@@ -166,14 +176,15 @@ app.get('/payment-callback', function (req, res) {
                                                 'curso': seat__.course,
                                                 'seccion': seat__.section
                                             });
+                                            console.log('line 177: seat modified SOLD');
                                         }).catch((error) => {
                                             console.log('Transaction not found');
                                             console.log(error);
                                         })
-
-
                                     });
                             } else {
+                                console.log('seat modified FREE');
+                                console.log(Object.values(seat_).join('~'));
                                 seat_.destroy();
                                 seatModified({
                                     'columna': seat_.column,
@@ -186,11 +197,11 @@ app.get('/payment-callback', function (req, res) {
                         }
                     }).catch(error => {
                         console.log('trono el findone');
-                        console.log(error);
                     })
                 });
 
                 let socket = users[user.id]['socket'];
+                console.log(socket?`socket for user${user.id} finded`:`socket for user${user.id} NOT found`);
                 socket.emit('payment.result.' + user.id, {
                     reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text,
                     status: resp_code //1 exitoso 2 denegado 3 error
@@ -199,7 +210,7 @@ app.get('/payment-callback', function (req, res) {
                 if (resp_code == 1) {
                     sendOrderEmail(seats, user);
                 }
-            });
+            }).catch(error=> console.log(`Transaction Create Error:${error}`));
 
         })
         .catch(error => {
@@ -589,6 +600,38 @@ app.post('/sendEmail', function (req, res) {
     }
 });
 
+app.post('/checkSeatsByUser',async function (req, res) {
+    const {seats,user} = req.body;
+    let otherUsers  = users.filter(use_r=> use_r.id!== user.id);
+    let status = false;
+    seats.forEach(async seat=>{
+        let seat_inDB = await Seat.findOne({
+            where: {
+                row: seat.fila,
+                column: seat.columna,
+                section: seat.seccion,
+                course: seat.curso
+            }
+        });
+        if(seat_inDB){
+            otherUsers.forEach(otherUser=>{
+                try {
+                    const {row,column,section,course} = seat_inDB;
+                    let otherSeats = timers[otherUser.id]['seats'] || [];    
+                    let finded = otherSeats.find(
+                        (otherSeat)=> 
+                        [otherSeat.fila,otherSeat.columna,otherSeat.seccion,otherSeat.curso].join("")===
+                        Object.values({row,column,section,course}).join("") );
+                    if(finded){
+                        status = true;       
+                    }    
+                } catch (error) {}
+            });
+        }
+        res.json({ status: status });
+    });
+});
+
 let io = null;
 let server = null;
 var fs = require('fs');
@@ -864,13 +907,16 @@ io.on("connection", socket => {
                     })
                 } else {
                     seat.destroy();
+                    let seatsUser = timers[user.id]['seats'] || [];    
+                    timers[user.id]['seats'] = seatsUser.filter(
+                        (otherSeat)=> 
+                        [otherSeat.fila,otherSeat.columna,otherSeat.seccion,otherSeat.curso].join("")!==
+                        [data.fila,data.columna,data.seccion,data.curso].join("") );
                     callback({
                         status: true,
                         message: 'Asiento liberado'
                     })
                 }
-
-
             });
         }
 
@@ -938,16 +984,18 @@ let deleteTimer = (user_id) => {
             }
         }).then(function (seat) {
             if (seat === null) {
-                console.log('No se pudo liberar asiento, al borrar timer', data)
+                console.log('No se pudo liberar asiento, al borrar timer', data);
             } else {
-                seat.destroy();
-                seatModified({
-                    'columna': seat.column,
-                    'fila': seat.row,
-                    'estado': 'free',
-                    'curso': seat.course,
-                    'seccion': seat.section
-                });
+                if(!(seat.estado==='sold')){
+                    seat.destroy();
+                    seatModified({
+                        'columna': seat.column,
+                        'fila': seat.row,
+                        'estado': 'free',
+                        'curso': seat.course,
+                        'seccion': seat.section
+                    });
+                }
             }
         });
 
