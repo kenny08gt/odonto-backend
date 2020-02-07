@@ -101,10 +101,10 @@ app.get('/payment-callback', function (req, res) {
         data: params
     })
         .then(response => {
+            let user = orders[id];
+            seat_by_userRef = timers[user.id]['seats'];
+            timers[user.id]['seats']=null;
             if (resp_code == 1) {
-                let user = orders[id];
-                seat_by_userRef = timers[user.id]['seats'];
-                timers[user.id]['seats']=null;
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
             } else if (resp_code == 2) {
                 res.send('<img style="max-height: 150px;" src="/glow.gif"><br>ID: ' + id + "<br>RESPCODE: " + resp_code);
