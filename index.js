@@ -200,6 +200,7 @@ app.get('/payment-callback', function (req, res) {
                 });
 
                 let socket = users[user.id]['socket'];
+                console.log(socket?`socket for user${user.id} finded`:`socket for user${user.id} NOT found`);
                 socket.emit('payment.result.' + user.id, {
                     reason: data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text,
                     status: resp_code //1 exitoso 2 denegado 3 error
