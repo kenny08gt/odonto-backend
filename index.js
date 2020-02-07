@@ -593,6 +593,38 @@ app.post('/sendEmail', function (req, res) {
     }
 });
 
+app.post('/checkSeatsByUser',async function (req, res) {
+    const {seats,user} = req.body;
+    let otherUsers  = users.filter(use_r=> use_r.id!== user.id);
+    let status = false;
+    seats.forEach(async seat=>{
+        let seat_inDB = await Seat.findOne({
+            where: {
+                row: seat.fila,
+                column: seat.columna,
+                section: seat.seccion,
+                course: seat.curso
+            }
+        });
+        if(seat_inDB){
+            otherUsers.forEach(otherUser=>{
+                try {
+                    const {row,column,section,course} = seat_inDB;
+                    let otherSeats = timers[otherUser.id]['seats'] || [];    
+                    let finded = otherSeats.find(
+                        (otherSeat)=> 
+                        [otherSeat.fila,otherSeat.columna,otherSeat.seccion,otherSeat.curso].join("")===
+                        Object.values({row,column,section,course}).join("") );
+                    if(finded){
+                        status = true;       
+                    }    
+                } catch (error) {}
+            });
+        }
+        res.json({ status: status });
+    });
+});
+
 let io = null;
 let server = null;
 var fs = require('fs');
@@ -868,13 +900,16 @@ io.on("connection", socket => {
                     })
                 } else {
                     seat.destroy();
+                    let seatsUser = timers[user.id]['seats'] || [];    
+                    timers[user.id]['seats'] = seatsUser.filter(
+                        (otherSeat)=> 
+                        [otherSeat.fila,otherSeat.columna,otherSeat.seccion,otherSeat.curso].join("")!==
+                        [data.fila,data.columna,data.seccion,data.curso].join("") );
                     callback({
                         status: true,
                         message: 'Asiento liberado'
                     })
                 }
-
-
             });
         }
 
