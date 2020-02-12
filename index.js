@@ -499,7 +499,8 @@ app.post('/get-payment-form', async (req, res) => {
 });
 
 app.post('/get-one-single-payment-form', async (req, res) => {
-    let dataForm = req.body.seats;
+    console.log('---1--');
+    let dataForm = req.body.data;
     let user = req.body.user;
     var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo, { compact: true, spaces: 4 }));
     var cartTotalString = `${dataForm.amount.toString()}00`;
@@ -520,6 +521,7 @@ app.post('/get-one-single-payment-form', async (req, res) => {
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.MerchantId = MerchantId;
 
+    console.log('---2--');
     axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
         .then(async (response) => {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
