@@ -767,7 +767,7 @@ const sendOrderEmail = function (seats, user) {
 
 const sendOrderOnlyPaymentEmail = function (user,dataForm,order_id) {
     const {firstname,lastname,amount,email,description} = dataForm;
-    let _htmlStr= _htmlEmailOnlyPayment(firstname,lastname,amount,description,order_id);
+    let _htmlStr= onlyPaymentPage._htmlEmailOnlyPayment(firstname,lastname,amount,description,order_id);
     
     var message = {
         from: "no-reply@server.com",
