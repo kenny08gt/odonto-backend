@@ -18,6 +18,7 @@ var enviroment = "marlin"
 //var enviroment = "ecm"
 
 var PreXmlInfo = require('./preprocessingtoken');
+let onlyPaymentPage =require('./template-html-response');
 
 const saltRounds = 12;
 var session = require("express-session")({
@@ -216,6 +217,33 @@ app.get('/payment-callback', function (req, res) {
         .catch(error => {
             console.log(error);
         });
+});
+
+app.get('/one-single-payment-callback', function (req, res) {
+    console.log('one-single-payment-callback');
+    let id = req.query.ID;
+    let resp_code = req.query.RespCode;
+    
+    let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
+    axios({
+        method: 'post',
+        url: 'https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
+        headers: {},
+        data: params
+    })
+    .then(response => {            
+            let {user,dataForm,order_id} = orders[id];
+            let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+            let reason = data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text;
+            if (resp_code == 1) {
+                res.send(onlyPaymentPage._html(resp_code,"Pago exitoso",'',order_id));
+            } else {
+                res.send(onlyPaymentPage._html(resp_code,"Error al realizar el pago",reason,order_id));
+            }   
+            if (resp_code == 1) {
+                sendOrderOnlyPaymentEmail(user,dataForm,order_id);
+            }
+    });
 });
 
 app.get('/*', function (req, res) {
@@ -468,7 +496,43 @@ app.post('/get-payment-form', async (req, res) => {
         .catch(err => {
             console.log(error)
         })
-})
+});
+
+app.post('/get-one-single-payment-form', async (req, res) => {
+    let dataForm = req.body.seats;
+    let user = req.body.user;
+    var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo, { compact: true, spaces: 4 }));
+    var cartTotalString = `${dataForm.amount.toString()}00`;
+    var arrayStr = cartTotalString.split('');
+    var amountStr = Array.from({ length: 12 - arrayStr.length }).map(x => '0').join('');
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount = amountStr + cartTotalString;
+    xmlDoc.HostedPagePreprocessRequest.CardHolderResponseURL='https://odontologiaindependiente.com/one-single-payment-callback';
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber = generateOrderNumber();
+    let order_id = xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber;
+    
+    // //generating signature
+    var ProcessingPass = 'KI73nt6s';//process.env.PROCESSING_PASSWORD;
+    var MerchantId = '88801272';//process.env.MERCHANT_ID;
+    var AcquirerId = '464748';//process.env.ACQUIRER_ID;
+    var Currency = '320';//process.env.CURRENCY;
+    var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64'));
+
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.MerchantId = MerchantId;
+
+    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
+        .then(async (response) => {
+            let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+            orders[data.HostedPagePreprocessResponse.SecurityToken._text] = {user,dataForm,order_id};
+            res.send({
+                securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
+                order_id: order_id
+            });
+        })
+        .catch(err => {
+            console.log(error)
+        })
+});
 
 //TODO implement save the order from the frontend
 app.post('/save_order', async (req, res) => {
@@ -680,6 +744,35 @@ const sendOrderEmail = function (seats, user) {
         subject: "Compra exitosa Orden " + order_id,
         text: "Su compra ha sido exitosa, Bienvenido a Unbiased 2020. Order id: " + order_id + ". Asientos:" + body,
         html: "Su compra ha sido exitosa. <br> Order id: " + order_id + "<br>Asientos:" + body
+    };
+
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
+    transporter.sendMail(message, function (error, info) {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('email sent', info.response)
+        }
+    });
+}
+
+const sendOrderOnlyPaymentEmail = function (user,dataForm,order_id) {
+    const {firstname,lastname,amount,description} = dataForm;
+    let _htmlStr= _htmlEmailOnlyPayment(firstname,lastname,amount,description,order_id);
+    
+    var message = {
+        from: "no-reply@server.com",
+        to: user.email,
+        //cc: "erickimpladent@gmail.com",
+        subject: "Pago exitoso, Orden " + order_id,
+        text: '',
+        html: _htmlStr
     };
 
     var transporter = nodemailer.createTransport({
