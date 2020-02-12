@@ -222,7 +222,7 @@ app.get('/payment-callback', function (req, res) {
 app.get('/one-single-payment-callback', function (req, res) {
     console.log('one-single-payment-callback');
     let id = req.query.ID;
-    let resp_code = req.query.RespCode;
+    let resp_code = parseInt(req.query.RespCode);
     
     let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
     axios({
@@ -235,12 +235,13 @@ app.get('/one-single-payment-callback', function (req, res) {
             let {user,dataForm,order_id} = orders[id];
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             let reason = data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text;
-            if (resp_code == 1) {
+            if (resp_code === 1) {
                 res.send(onlyPaymentPage._html(resp_code,"Pago exitoso",'',order_id));
             } else {
                 res.send(onlyPaymentPage._html(resp_code,"Error al realizar el pago",reason,order_id));
             }   
-            if (resp_code == 1) {
+            if (resp_code === 1) {
+                console.log('sendOrderOnlyPaymentEmail');
                 sendOrderOnlyPaymentEmail(user,dataForm,order_id);
             }
     });
@@ -765,12 +766,12 @@ const sendOrderEmail = function (seats, user) {
 }
 
 const sendOrderOnlyPaymentEmail = function (user,dataForm,order_id) {
-    const {firstname,lastname,amount,description} = dataForm;
+    const {firstname,lastname,amount,email,description} = dataForm;
     let _htmlStr= _htmlEmailOnlyPayment(firstname,lastname,amount,description,order_id);
     
     var message = {
         from: "no-reply@server.com",
-        to: user.email,
+        to: email,
         //cc: "erickimpladent@gmail.com",
         subject: "Pago exitoso, Orden " + order_id,
         text: '',
