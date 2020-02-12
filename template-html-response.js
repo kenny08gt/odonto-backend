@@ -1,9 +1,10 @@
 module.exports._html = function (response_code,title,reason,orderNumber) {
     return `<html>
         <head>
+            <link href="https://fonts.googleapis.com/css?family=Roboto" type="text/css" rel="stylesheet">
             <style type="text/css" media="all">
                 *{
-                    font-family: "Roboto";
+                    font-family: 'Roboto', sans-serif;  
                 }
                 h1{
                     color: ${response_code===1?'#0c991f':'#721c24'};
@@ -30,9 +31,11 @@ module.exports._html = function (response_code,title,reason,orderNumber) {
      return `
      <html>
      <head>
+        <link href="https://fonts.googleapis.com/css?family=Roboto" type="text/css" rel="stylesheet">
+            
          <style type="text/css" media="all">
              *{
-                 font-family: "Roboto";
+                font-family: 'Roboto', sans-serif;
              }
              h2,strong,span{
                  color:#333;
@@ -52,7 +55,7 @@ module.exports._html = function (response_code,title,reason,orderNumber) {
      </head>
      <body>
      <center><h1>Un<span id='span_yellow'>biased</span>, Odontologia Independiente</h1></center>    
-     <center><h2>Detalle de Pago: </h2><small>${orderNumber}</small></center>
+     <center><h2>Detalle de Pago: </h2>${orderNumber}</center>
      <strong>Nombres:</strong><span> ${firstname}</span>
      <hr/>
      <strong>Apellidos:</strong><span> ${lastname}</span>

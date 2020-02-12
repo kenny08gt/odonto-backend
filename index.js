@@ -241,8 +241,7 @@ app.get('/one-single-payment-callback', function (req, res) {
                 res.send(onlyPaymentPage._html(resp_code,"Error al realizar el pago",reason,order_id));
             }   
             if (resp_code === 1) {
-                console.log('sendOrderOnlyPaymentEmail');
-                sendOrderOnlyPaymentEmail(user,dataForm,order_id);
+                sendOrderOnlyPaymentEmail(user,dataForm,order_id,idProperty);   
             }
     });
 });
@@ -765,7 +764,7 @@ const sendOrderEmail = function (seats, user) {
     });
 }
 
-const sendOrderOnlyPaymentEmail = function (user,dataForm,order_id) {
+const sendOrderOnlyPaymentEmail = function (user,dataForm,order_id,idProperty) {
     const {firstname,lastname,amount,email,description} = dataForm;
     let _htmlStr= onlyPaymentPage._htmlEmailOnlyPayment(firstname,lastname,amount,description,order_id);
     
@@ -790,6 +789,9 @@ const sendOrderOnlyPaymentEmail = function (user,dataForm,order_id) {
             console.log(error);
         } else {
             console.log('email sent', info.response)
+            try {
+                delete orders[idProperty];
+            } catch (error) {   }
         }
     });
 }
