@@ -502,8 +502,7 @@ app.post('/get-one-single-payment-form', async (req, res) => {
     console.log('---1--');
     let dataForm = req.body.data;
     let user = req.body.user;
-    console.log(dataForm);
-    /*var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo, { compact: true, spaces: 4 }));
+    var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo, { compact: true, spaces: 4 }));
     var cartTotalString = `${dataForm.amount.toString()}00`;
     var arrayStr = cartTotalString.split('');
     var amountStr = Array.from({ length: 12 - arrayStr.length }).map(x => '0').join('');
@@ -534,7 +533,7 @@ app.post('/get-one-single-payment-form', async (req, res) => {
         })
         .catch(err => {
             console.log(error)
-        })/*/
+        })
 });
 
 //TODO implement save the order from the frontend
