@@ -331,7 +331,7 @@ app.post('/updateSeatData', async(req,res) => {
             course: seat.curso
         }
     });
-
+    console.log(seatInstance)
     if(seatInstance){
         seatInstance.name = seat.name;
         seatInstance.register_number = seat.register_number;
