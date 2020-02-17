@@ -320,9 +320,8 @@ app.get('/logout', (req, res) => {
 });
 
 app.post('/updateSeatData', async(req,res) => {
-    console.log('update instance seat')
     let seat = req.body
-    console.log(seat)
+    console.log(`update instance seat ${seat.fila} - ${seat.columna} - ${seat.seccion} - ${seat.curso}`)
     let seatInstance = await Seat.findOne({
         where: {
             row: seat.fila,
@@ -331,7 +330,6 @@ app.post('/updateSeatData', async(req,res) => {
             course: seat.curso
         }
     });
-    console.log(seatInstance)
     if(seatInstance){
         seatInstance.name = seat.name;
         seatInstance.register_number = seat.register_number;
