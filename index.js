@@ -322,6 +322,7 @@ app.get('/logout', (req, res) => {
 app.post('/updateSeatData', async(req,res) => {
     console.log('update instance seat')
     let seat = req.body
+    console.log(seat)
     let seatInstance = await Seat.findOne({
         where: {
             row: seat.fila,
