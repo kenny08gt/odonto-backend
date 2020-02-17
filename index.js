@@ -319,6 +319,36 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
+app.post('/updateSeatData', async(req,res) => {
+    console.log('update instance seat')
+    let seat = req.body
+    let seatInstance = await Seat.findOne({
+        where: {
+            row: seat.fila,
+            column: seat.columna,
+            section: seat.seccion,
+            course: seat.curso
+        }
+    });
+
+    if(seatInstance){
+        seatInstance.name = seat.name;
+        seatInstance.register_number = seat.register_number;
+        seatInstance.university = seat.university;
+        seatInstance.no_document = seat.no_document;
+        await seatInstance.save();
+        res.json({
+            state: true,
+            message: 'Información actualizada'
+        })
+        return;
+    }
+    res.json({
+        state: false,
+        message: 'No se encontró el asiento solicitado'
+    })
+});
+
 app.post('/report', async (req, res) => {
     console.log('report get');
     // if (req.session.user && req.cookies.user_sid && !req.session.user.admin) {
