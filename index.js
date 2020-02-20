@@ -18,6 +18,7 @@ var enviroment = "marlin"
 //var enviroment = "ecm"
 
 var PreXmlInfo = require('./preprocessingtoken');
+let onlyPaymentPage =require('./template-html-response');
 
 const saltRounds = 12;
 var session = require("express-session")({
@@ -216,6 +217,32 @@ app.get('/payment-callback', function (req, res) {
         .catch(error => {
             console.log(error);
         });
+});
+
+app.get('/one-single-payment-callback', function (req, res) {
+    let id = req.query.ID;
+    let resp_code = parseInt(req.query.RespCode);
+    
+    let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
+    axios({
+        method: 'post',
+        url: 'https://'+ enviroment +'.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
+        headers: {},
+        data: params
+    })
+    .then(response => {            
+            let {user,dataForm,order_id} = orders[id];
+            let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+            let reason = data.HostedPageResultsResponse.AuthResponse.CreditCardTransactionResults.ReasonCodeDescription._text;
+            if (resp_code === 1) {
+                res.send(onlyPaymentPage._html(resp_code,"Pago exitoso",'',order_id));
+            } else {
+                res.send(onlyPaymentPage._html(resp_code,"Error al realizar el pago",reason,order_id));
+            }   
+            if (resp_code === 1) {
+                sendOrderOnlyPaymentEmail(user,dataForm,order_id,idProperty);   
+            }
+    });
 });
 
 app.get('/*', function (req, res) {
@@ -468,7 +495,44 @@ app.post('/get-payment-form', async (req, res) => {
         .catch(err => {
             console.log(error)
         })
-})
+});
+
+app.post('/get-one-single-payment-form', async (req, res) => {
+    let dataForm = req.body.data;
+    let user = req.body.user;
+    var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo, { compact: true, spaces: 4 }));
+    var cartTotalString = `${dataForm.amount.toString()}00`;
+    var arrayStr = cartTotalString.split('');
+    var amountStr = Array.from({ length: 12 - arrayStr.length }).map(x => '0').join('');
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount = amountStr + cartTotalString;
+    xmlDoc.HostedPagePreprocessRequest.CardHolderResponseURL='https://odontologiaindependiente.com/one-single-payment-callback';
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber = generateOrderNumber();
+    let order_id = xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber;
+    
+    // //generating signature
+    var ProcessingPass = process.env.PROCESSING_PASSWORD;//'KI73nt6s';
+    var MerchantId = process.env.MERCHANT_ID;//'88801272';
+    var AcquirerId = process.env.ACQUIRER_ID;//'464748';
+    var Currency = process.env.CURRENCY;//'320';
+    var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64'));
+
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
+    xmlDoc.HostedPagePreprocessRequest.TransactionDetails.MerchantId = MerchantId;
+
+    console.log('---2--');
+    axios.post('https://'+ enviroment +'.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
+        .then(async (response) => {
+            let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
+            orders[data.HostedPagePreprocessResponse.SecurityToken._text] = {user,dataForm,order_id};
+            res.send({
+                securityToken: data.HostedPagePreprocessResponse.SecurityToken._text,
+                order_id: order_id
+            });
+        })
+        .catch(err => {
+            console.log(error)
+        })
+});
 
 //TODO implement save the order from the frontend
 app.post('/save_order', async (req, res) => {
@@ -665,10 +729,14 @@ Array.prototype.insert = function (index, item) {
 
 const sendOrderEmail = function (seats, user) {
     console.log("send order email");
+    const [firstSeat] = seats;
+    const {name,register_number,university} = firstSeat;
+    let info =`<br><br>Información Personal:<br><span><strong>Correo:</strong>${user.email}</span><br><span><strong>Nombre:</strong>${name||''}</span><br><span><strong>Colegiado/Carnet:</strong>${register_number||''}</span><br><span><strong>Universidad:</strong>${university||''}</span><br>`;
     let body = "<table>";
+
     let order_id = users[user.id]['order_id'];
     seats.forEach(function (seat) {
-        body += '<tr><td>fila: ' + seat.fila + '</td><td>columna: ' + seat.columna + '</td><td>sección: ' + seat.seccion + '</td><td>curso: ' + seat.curso + '</td></tr>'
+        body += `<tr><td>fila: ${seat.fila} </td><td>columna: ${seat.columna} </td><td>sección: ${seat.seccion}</td><td>curso: ${seat.curso} </td></tr>`;
     })
 
     body += '</table>';
@@ -679,7 +747,7 @@ const sendOrderEmail = function (seats, user) {
         cc: "erickimpladent@gmail.com",
         subject: "Compra exitosa Orden " + order_id,
         text: "Su compra ha sido exitosa, Bienvenido a Unbiased 2020. Order id: " + order_id + ". Asientos:" + body,
-        html: "Su compra ha sido exitosa. <br> Order id: " + order_id + "<br>Asientos:" + body
+        html: "Su compra ha sido exitosa. <br> Order id: " + order_id + info + "<br>Asientos:" + body
     };
 
     var transporter = nodemailer.createTransport({
@@ -694,6 +762,38 @@ const sendOrderEmail = function (seats, user) {
             console.log(error);
         } else {
             console.log('email sent', info.response)
+        }
+    });
+}
+
+const sendOrderOnlyPaymentEmail = function (user,dataForm,order_id,idProperty) {
+    const {firstname,lastname,amount,email,description} = dataForm;
+    let _htmlStr= onlyPaymentPage._htmlEmailOnlyPayment(firstname,lastname,amount,description,order_id);
+    
+    var message = {
+        from: "no-reply@server.com",
+        to: email,
+        cc: "erickimpladent@gmail.com",
+        subject: "Pago exitoso, Orden " + order_id,
+        text: '',
+        html: _htmlStr
+    };
+
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
+    transporter.sendMail(message, function (error, info) {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('email sent', info.response)
+            try {
+                delete orders[idProperty];
+            } catch (error) {   }
         }
     });
 }
