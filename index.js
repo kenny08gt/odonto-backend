@@ -729,12 +729,14 @@ Array.prototype.insert = function (index, item) {
 
 const sendOrderEmail = function (seats, user) {
     console.log("send order email");
+    const [firstSeat] = seats;
+    const {name,register_number,university} = firstSeat;
+    let info =`<br><br>Información Personal:<br><span><strong>Correo:</strong>${user.email}</span><br><span><strong>Nombre:</strong>${name||''}</span><br><span><strong>Colegiado/Carnet:</strong>${register_number||''}</span><br><span><strong>Universidad:</strong>${university||''}</span><br>`;
     let body = "<table>";
+
     let order_id = users[user.id]['order_id'];
     seats.forEach(function (seat) {
-        body += '<tr><td>fila: ' + seat.fila + '</td><td>columna: ' + seat.columna + '</td><td>sección: ' + seat.seccion + '</td><td>curso: ' + seat.curso + '</td></tr>'
-        const {name,register_number,university} = seat;
-        body += `<h3>${user.email}</h3><h3>${name||''}</h3><h3>${register_number||''}</h3><h3>${university||''}</h3>`;
+        body += `<tr><td>fila: ${seat.fila} </td><td>columna: ${seat.columna} </td><td>sección: ${seat.seccion}</td><td>curso: ${seat.curso} </td></tr>`;
     })
 
     body += '</table>';
@@ -745,7 +747,7 @@ const sendOrderEmail = function (seats, user) {
         cc: "erickimpladent@gmail.com",
         subject: "Compra exitosa Orden " + order_id,
         text: "Su compra ha sido exitosa, Bienvenido a Unbiased 2020. Order id: " + order_id + ". Asientos:" + body,
-        html: "Su compra ha sido exitosa. <br> Order id: " + order_id + "<br>Asientos:" + body
+        html: "Su compra ha sido exitosa. <br> Order id: " + order_id + info + "<br>Asientos:" + body
     };
 
     var transporter = nodemailer.createTransport({
