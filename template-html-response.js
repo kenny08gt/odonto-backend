@@ -64,6 +64,11 @@ module.exports._html = function (response_code,title,reason,orderNumber) {
      <hr/>
      <strong>Descripcion:</strong><span> ${description}</span>
      <hr/>
+     <footer>
+        <i>Dr. Erick Hernandez</i>
+        <div></div>
+        <small><a href="mailto:erickimpladent@gmail.com">erickimpladent@gmail.com</a></small>
+     </footer>
      </body>
      </html>
      `;

@@ -220,14 +220,13 @@ app.get('/payment-callback', function (req, res) {
 });
 
 app.get('/one-single-payment-callback', function (req, res) {
-    console.log('one-single-payment-callback');
     let id = req.query.ID;
     let resp_code = parseInt(req.query.RespCode);
     
     let params = '<string xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.firstatlanticcommerce.com/gateway/data">' + id + '</string>';
     axios({
         method: 'post',
-        url: 'https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
+        url: 'https://'+ enviroment +'.firstatlanticcommerce.com/PGServiceXML/HostedPageResults',
         headers: {},
         data: params
     })
@@ -499,7 +498,6 @@ app.post('/get-payment-form', async (req, res) => {
 });
 
 app.post('/get-one-single-payment-form', async (req, res) => {
-    console.log('---1--');
     let dataForm = req.body.data;
     let user = req.body.user;
     var xmlDoc = JSON.parse(convert.xml2json(PreXmlInfo, { compact: true, spaces: 4 }));
@@ -512,17 +510,17 @@ app.post('/get-one-single-payment-form', async (req, res) => {
     let order_id = xmlDoc.HostedPagePreprocessRequest.TransactionDetails.OrderNumber;
     
     // //generating signature
-    var ProcessingPass = 'KI73nt6s';//process.env.PROCESSING_PASSWORD;
-    var MerchantId = '88801272';//process.env.MERCHANT_ID;
-    var AcquirerId = '464748';//process.env.ACQUIRER_ID;
-    var Currency = '320';//process.env.CURRENCY;
+    var ProcessingPass = process.env.PROCESSING_PASSWORD;//'KI73nt6s';
+    var MerchantId = process.env.MERCHANT_ID;//'88801272';
+    var AcquirerId = process.env.ACQUIRER_ID;//'464748';
+    var Currency = process.env.CURRENCY;//'320';
     var Signature = (new Buffer(sha1(`${ProcessingPass}${MerchantId}${AcquirerId}${order_id}${xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Amount}${Currency}`), "hex").toString('base64'));
 
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.Signature = Signature;
     xmlDoc.HostedPagePreprocessRequest.TransactionDetails.MerchantId = MerchantId;
 
     console.log('---2--');
-    axios.post('https://ecm.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
+    axios.post('https://'+ enviroment +'.firstatlanticcommerce.com/PGServiceXML/HostedPagePreprocess', convert.json2xml(xmlDoc, { compact: true, ignoreComment: true, spaces: 4 }))
         .then(async (response) => {
             let data = JSON.parse(convert.xml2json(response.data, { compact: true, spaces: 4 }));
             orders[data.HostedPagePreprocessResponse.SecurityToken._text] = {user,dataForm,order_id};
@@ -735,6 +733,8 @@ const sendOrderEmail = function (seats, user) {
     let order_id = users[user.id]['order_id'];
     seats.forEach(function (seat) {
         body += '<tr><td>fila: ' + seat.fila + '</td><td>columna: ' + seat.columna + '</td><td>sección: ' + seat.seccion + '</td><td>curso: ' + seat.curso + '</td></tr>'
+        const {name,register_number,university} = seat;
+        body += `<h3>${user.email}</h3><h3>${name||''}</h3><h3>${register_number||''}</h3><h3>${university||''}</h3>`;
     })
 
     body += '</table>';
@@ -771,7 +771,7 @@ const sendOrderOnlyPaymentEmail = function (user,dataForm,order_id,idProperty) {
     var message = {
         from: "no-reply@server.com",
         to: email,
-        //cc: "erickimpladent@gmail.com",
+        cc: "erickimpladent@gmail.com",
         subject: "Pago exitoso, Orden " + order_id,
         text: '',
         html: _htmlStr
