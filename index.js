@@ -240,7 +240,7 @@ app.get('/one-single-payment-callback', function (req, res) {
                 res.send(onlyPaymentPage._html(resp_code,"Error al realizar el pago",reason,order_id));
             }   
             if (resp_code === 1) {
-                sendOrderOnlyPaymentEmail(user,dataForm,order_id,idProperty);   
+                sendOrderOnlyPaymentEmail(user,dataForm,order_id,id);   
             }
     });
 });
